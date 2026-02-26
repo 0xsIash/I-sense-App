@@ -5,6 +5,7 @@ import 'package:isense/features/auth/views/signup.dart';
 import 'package:isense/features/auth/views/splash.dart';
 import 'package:isense/features/home/views/home_page.dart';
 
+// main function
 void main() {
   runApp(const MyApp());
 }
