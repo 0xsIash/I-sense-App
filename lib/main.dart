@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:isense/features/auth/views/login.dart';
 import 'package:isense/features/auth/views/signup.dart';
 import 'package:isense/features/auth/views/splash.dart';
-import 'package:isense/features/home/views/home_page.dart';
+import 'package:isense/features/home/widgets/main_layout.dart';
 
 // main function
 void main() {
@@ -31,7 +31,7 @@ class _MyAppState extends State<MyApp> {
         '/' : (context) => const Splash(),
         'login' : (context) => const Login(),
         'signup' : (context) => const Signup(),
-        'home' : (context) => const HomePage(),
+        'home' : (context) => const MainLayout(),
       },
       ),
     );

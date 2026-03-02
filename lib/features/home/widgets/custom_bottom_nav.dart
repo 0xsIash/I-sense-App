@@ -5,72 +5,73 @@ import 'package:isense/core/utils/app_colors.dart';
 import 'package:isense/core/widgets/custom_svg_wrapper.dart';
 
 class CustomBottomNav extends StatelessWidget {
-  const CustomBottomNav({super.key, required this.onCameraTap});
+  final int currentIndex;
+  final Function(int) onTap;
 
-  final VoidCallback onCameraTap;
+  const CustomBottomNav({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 70.h,
+      height: 85.h,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24.r),
           topRight: Radius.circular(24.r),
         ),
-
         border: Border.all(
           color: AppColors.primary,
-          width: 2,
+          width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
-
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-            _buildNavItem(
-            iconPath: AppAssets.camera, label: 'Detect',onTap: () {onCameraTap();})
-
+          _buildNavItem(0, "Home", AppAssets.home),
+          _buildNavItem(1, "Detect", AppAssets.camera),
+          _buildNavItem(2, "Browse", AppAssets.explore),
         ],
       ),
     );
   }
-}
 
-Widget _buildNavItem({
-  required String iconPath,
-    required String label,
-    VoidCallback? onTap,
-}) {
-  return GestureDetector(
-    onTap: onTap,
-    behavior: HitTestBehavior.opaque,
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ColorFiltered(
-          colorFilter: ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
-          child: CustomSvgWrapper(
+  Widget _buildNavItem(int index, String label, String iconPath) {
+    bool isSelected = currentIndex == index;
+    return GestureDetector(
+      onTap: () => onTap(index),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CustomSvgWrapper(
             path: iconPath,
             iconWidth: 24.w,
             iconHeight: 24.h,
-            ),
+            color: isSelected ? AppColors.primary : Colors.grey,
           ),
-
-          SizedBox(height: 5.h),
+          SizedBox(height: 4.h),
           Text(
             label,
             style: TextStyle(
-              color: AppColors.primary,
+              color: isSelected ? AppColors.primary : Colors.grey,
               fontSize: 12.sp,
-              fontWeight: FontWeight.w400,
-              fontFamily: "Kreon"
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
-
           ),
-          
-        
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }

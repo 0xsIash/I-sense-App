@@ -1,56 +1,45 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_assets.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/core/widgets/custom_svg_wrapper.dart';
 
 class ScanItemCard extends StatelessWidget {
   final File? imageFile;
   final String? imageUrl;
-  final VoidCallback onDelete;
   final Widget bottomContent;
+  final bool isSelectionMode;
+  final bool isSelected;
 
   const ScanItemCard({
     super.key,
     this.imageFile,
     this.imageUrl,
-    required this.onDelete,
     required this.bottomContent,
+    this.isSelectionMode = false,
+    this.isSelected = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (imageUrl != null) {
-      debugPrint("🖼️ ScanItemCard IMAGE URL: $imageUrl");
-    }
-    if (imageFile != null) {
-      debugPrint("📁 ScanItemCard IMAGE FILE: ${imageFile!.path}");
-    }
-
     ImageProvider? imageProvider;
-    
     if (imageFile != null) {
       imageProvider = FileImage(imageFile!);
-      debugPrint("✅ Using FileImage");
-    } 
-    else if (imageUrl != null && imageUrl!.isNotEmpty) {
-      imageProvider = NetworkImage(imageUrl!);
-      debugPrint("✅ Using NetworkImage: $imageUrl");
-    }
-    else {
-      debugPrint("❌ No image available!");
+    } else if (imageUrl != null && imageUrl!.isNotEmpty) {
+      imageProvider = CachedNetworkImageProvider(imageUrl!);
     }
 
     return Container(
-      width: 155.w,
-      height: 165.h,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.2),
+          width: isSelected ? 2 : 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -58,54 +47,51 @@ class ScanItemCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Positioned(
-            top: 10.h,
-            right: 10.w,
-            child: InkWell(
-              onTap: onDelete,
-              child: CustomSvgWrapper(
-                path: AppAssets.delete,
-                iconWidth: 18.w,
-                iconHeight: 18.h,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: EdgeInsets.all(12.w), 
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.r),
+                    child: imageProvider != null
+                        ? Image(image: imageProvider, fit: BoxFit.contain) 
+                        : Icon(Icons.image_not_supported, color: Colors.grey[300], size: 40),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                  child: bottomContent,
+                ),
+              ),
+            ],
+          ),
+          if (isSelectionMode)
+            Positioned(
+              top: 8.h,
+              right: 8.w,
+              child: Container(
+                width: 20.w,
+                height: 20.w,
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary : Colors.white,
+                  shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.circular(4.r),
+                  border: Border.all(
+                    color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.5),
+                    width: 1.5,
+                  ),
+                ),
+                child: isSelected
+                    ? Icon(Icons.check, color: Colors.white, size: 14.sp)
+                    : null,
               ),
             ),
-          ),
-
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.w),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: 15.h),
-
-                Container(
-                  width: 103.w,
-                  height: 103.w,
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryBackgorud,
-                    borderRadius: BorderRadius.circular(16.r),
-                    image: imageProvider != null
-                        ? DecorationImage(
-                            image: imageProvider,
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: imageProvider == null
-                      ? Icon(
-                          Icons.image_not_supported,
-                          color: Colors.grey[400],
-                          size: 30.sp,
-                        )
-                      : null,
-                ),
-
-                SizedBox(height: 10.h),
-
-                bottomContent,
-              ],
-            ),
-          ),
         ],
       ),
     );

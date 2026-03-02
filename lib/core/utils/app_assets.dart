@@ -12,6 +12,7 @@ abstract class AppAssets {
     static const String camera = '${_iconBasePath}camera.svg';
     static const String delete = '${_iconBasePath}delete.svg';
     static const String email = '${_iconBasePath}email.svg';
+    static const String explore = '${_iconBasePath}explore.svg';
     static const String filter = '${_iconBasePath}filter.svg';
     static const String home = '${_iconBasePath}home.svg';
     static const String lock = '${_iconBasePath}lock.svg';

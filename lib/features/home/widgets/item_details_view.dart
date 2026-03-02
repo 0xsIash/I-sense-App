@@ -138,7 +138,7 @@ class ItemDetailsView extends StatelessWidget {
                 margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 5.h),
                 width: 100.w,
                 height: 2.h,
-                color: const Color(0xffE5E8F3),
+                color: AppColors.primary,
               ),
 
               SizedBox(height: 15.h),

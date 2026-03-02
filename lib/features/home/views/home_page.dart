@@ -3,38 +3,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:isense/core/utils/app_colors.dart';
+import 'package:isense/core/utils/app_assets.dart';
 import 'package:isense/features/home/models/scan_item_model.dart';
 import 'package:isense/features/home/services/image_service.dart';
 import 'package:isense/features/home/services/job_service.dart';
-import 'package:isense/features/home/widgets/custom_bottom_nav.dart';
+import 'package:isense/features/home/widgets/scan_item_card.dart';
 import 'package:isense/features/home/widgets/custom_drawer.dart';
-import 'package:isense/features/home/widgets/history_tab.dart';
-import 'package:isense/features/home/widgets/notification_page.dart';
-import 'package:isense/features/home/widgets/processing_tab.dart';
-import 'package:isense/features/home/widgets/toggle_switch_btn.dart';
+import 'package:isense/features/home/widgets/item_details_view.dart';
+import 'package:isense/core/widgets/custom_btn.dart';
+import 'package:isense/core/widgets/custom_svg_wrapper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   final ImageService _imageService = ImageService();
   final JobService _jobService = JobService();
-  
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
-  bool isProcessingTab = true;
-  bool _isLoadingHistory = false; 
+  bool _isLoadingHistory = false;
+  bool isSelectionMode = false;
+  bool _isDeleting = false;
+
   List<ScanItemModel> processingList = [];
   List<ScanItemModel> historyList = [];
+  List<ScanItemModel> selectedItems = [];
 
   @override
   void initState() {
     super.initState();
-    _loadHistory(); 
+    _loadHistory();
   }
 
   Future<void> _loadHistory() async {
@@ -44,36 +46,37 @@ class _HomePageState extends State<HomePage> {
       if (mounted) {
         setState(() {
           historyList = history; 
+          _isLoadingHistory = false;
         });
-        
-        for (var item in historyList) {
-          _fetchItemDetailsInBackground(item);
-        }
+        _fetchDetailsSequentially(historyList);
       }
     } catch (e) {
-      debugPrint("Error loading history: $e");
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingHistory = false);
+      if (mounted) setState(() => _isLoadingHistory = false);
+    }
+  }
+
+  Future<void> _fetchDetailsSequentially(List<ScanItemModel> items) async {
+    for (var item in items) {
+      if (item.extractedItems == null || item.extractedItems!.isEmpty) {
+        await _fetchItemDetailsInBackground(item);
       }
     }
   }
 
   Future<void> _fetchItemDetailsInBackground(ScanItemModel item) async {
-    if (item.imageId == null) return;
+    final int targetId = item.imageId ?? item.id ?? 0;
+    if (targetId == 0) return;
     try {
-      final objects = await _jobService.getImageObjects(item.imageId!);
+      final objects = await _jobService.getImageObjects(targetId);
       if (mounted && objects.isNotEmpty) {
         setState(() {
-          item.extractedItems = objects; 
+          item.extractedItems = objects;
         });
       }
-    } catch (e) {
-      // .
-    }
+    } catch (e) {}
   }
 
-  Future<void> _pickImageFromCamera() async {
+  Future<void> pickImageFromCamera() async {
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(source: ImageSource.camera);
@@ -86,15 +89,12 @@ class _HomePageState extends State<HomePage> {
         );
 
         setState(() {
-          processingList.add(newItem);
-          isProcessingTab = true; 
+          processingList.insert(0, newItem);
         });
 
         _uploadAndProcessImage(newItem);
       }
-    } catch (e) {
-      debugPrint("Error picking image: $e");
-    }
+    } catch (e) {}
   }
 
   Future<void> _uploadAndProcessImage(ScanItemModel item) async {
@@ -104,8 +104,6 @@ class _HomePageState extends State<HomePage> {
       if (item.imageFile != null) {
         final responseData = await _imageService.uploadImage(item.imageFile!);
         
-        debugPrint("🔵 UPLOAD RESULT: $responseData"); 
-
         setState(() {
           item.id = responseData['id'];
           item.jobId = responseData['job_id'];
@@ -122,7 +120,6 @@ class _HomePageState extends State<HomePage> {
             status = await _jobService.checkJobStatus(item.jobId!);
           } catch (e) {
             if (item.isDeleted) break; 
-            debugPrint("Retry checking status...");
           }
 
           if (mounted && item.progress < 0.8 && !item.isDeleted) {
@@ -146,19 +143,14 @@ class _HomePageState extends State<HomePage> {
             item.status = 'completed';
             
             processingList.remove(item);
-            historyList.insert(0, item); 
+            historyList.insert(0, item);
           });
         }
       }
     } catch (e) {
-      debugPrint("Error: $e");
       if (mounted && !item.isDeleted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Error: $e"),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-          ),
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
         );
         setState(() {
            processingList.remove(item);
@@ -167,53 +159,33 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _deleteItem(ScanItemModel item, bool fromProcessing) async {
-    item.isDeleted = true; 
-    
-    if (item.imageId != null) {
-      try {
-        await _jobService.deleteImage(item.imageId!);
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Failed to delete from server: $e"), backgroundColor: Colors.red),
-          );
-        }
-        return; 
+  void toggleSelectionMode() {
+    setState(() {
+      isSelectionMode = !isSelectionMode;
+      if (!isSelectionMode) {
+        selectedItems.clear();
       }
-    }
-
-    if (mounted) {
-      setState(() {
-        if (fromProcessing) {
-          processingList.remove(item);
-        } else {
-          historyList.remove(item);
-        }
-      });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Item deleted successfully"), backgroundColor: Colors.green),
-      );
-    }
+    });
   }
 
-  Future<void> _confirmDelete(ScanItemModel item, bool fromProcessing) async {
+  void toggleItemSelection(ScanItemModel item) {
+    setState(() {
+      if (selectedItems.contains(item)) {
+        selectedItems.remove(item);
+      } else {
+        selectedItems.add(item);
+      }
+    });
+  }
+
+  Future<void> _confirmDelete() async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirm Deletion', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('Are you sure you want to delete this item?'),
-                SizedBox(height: 10),
-                Text('This action cannot be undone.', style: TextStyle(fontSize: 12, color: Colors.grey)),
-              ],
-            ),
-          ),
+          content: Text('Are you sure you want to delete ${selectedItems.length} items?\nThis action cannot be undone.'),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
@@ -223,7 +195,7 @@ class _HomePageState extends State<HomePage> {
               child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
-                _deleteItem(item, fromProcessing);
+                deleteSelectedItems();
               },
             ),
           ],
@@ -232,126 +204,247 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> deleteSelectedItems() async {
+    setState(() => _isDeleting = true);
+
+    List<ScanItemModel> itemsToDelete = List.from(selectedItems);
+
+    for (var item in itemsToDelete) {
+      item.isDeleted = true;
+      final int targetId = item.imageId ?? item.id ?? 0;
+      
+      if (targetId != 0) {
+        try {
+          await _jobService.deleteImage(targetId);
+        } catch (e) {
+          debugPrint("Failed to delete item from server: $e");
+        }
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        historyList.removeWhere((item) => itemsToDelete.contains(item));
+        processingList.removeWhere((item) => itemsToDelete.contains(item));
+        isSelectionMode = false;
+        selectedItems.clear();
+        _isDeleting = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Items deleted successfully"), backgroundColor: Colors.green),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    String userName = ModalRoute.of(context)!.settings.arguments as String? ?? "User";
+    String userName = "aya"; 
+    List<ScanItemModel> allItems = [...processingList, ...historyList];
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: AppColors.primaryBackgrond,
-      
+      backgroundColor: Colors.white,
       drawer: CustomDrawer(userName: userName),
-
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: 20.h),
+            SizedBox(height: 15.h),
             
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  GestureDetector(
-                    onTap: () => _scaffoldKey.currentState!.openDrawer(),
-                    child: Row(
-                      children: [
-                        Icon(Icons.menu, color: AppColors.primary),
-                        SizedBox(width: 12.w),
-                        Text(
-                          userName,
-                          style: TextStyle(
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                            fontFamily: 'Nunito Sans',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => NotificationPage(
-                            processingCount: processingList.length,
-                            historyCount: historyList.length,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Icon(
-                          Icons.notifications_none,
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => _scaffoldKey.currentState!.openDrawer(),
+                        child: Icon(Icons.menu, color: AppColors.primary, size: 28.sp),
+                      ),
+                      SizedBox(width: 12.w),
+                      Text(
+                        "Hello $userName !",
+                        style: TextStyle(
+                          fontSize: 22.sp,
+                          fontWeight: FontWeight.bold,
                           color: AppColors.primary,
-                          size: 28.sp,
                         ),
-                        
-                        if (historyList.isNotEmpty)
-                          Positioned(
-                            right: -2,
-                            top: -2,
-                            child: Container(
-                              padding: EdgeInsets.all(4.w),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                '${historyList.length}',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
+                  Icon(Icons.notifications_none, color: AppColors.primary, size: 28.sp),
+                ],
+              ),
+            ),
+            
+            SizedBox(height: 30.h),
+            
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.history, color: AppColors.primary, size: 24.sp),
+                      SizedBox(width: 8.w),
+                      Text(
+                        "Recent Uploads",
+                        style: TextStyle(
+                          fontSize: 20.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  CustomBtn(
+                    text: isSelectionMode ? "Cancel" : "Select",
+                    btnWidth: 90.w,
+                    btnHeight: 35.h,
+                    onPressed: toggleSelectionMode,
+                    weight: FontWeight.bold,
+                    size: 14.sp,
+                    fontFamily: 'Nunito Sans',
+                    eleveation: 0,
                   ),
                 ],
               ),
             ),
             
-            SizedBox(height: 25.h),
-            
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: ToggleSwitchBtn(
-                isProcessing: isProcessingTab,
-                onChanged: (newValue) {
-                  setState(() => isProcessingTab = newValue);
-                },
-              ),
-            ),
-            
-            SizedBox(height: 10.h),
+            SizedBox(height: 20.h),
             
             Expanded(
-              child: isProcessingTab
-                  ? ProcessingTab(
-                      items: processingList,
-                      onDelete: (item) => _confirmDelete(item, true),
-                    )
-                  : _isLoadingHistory && historyList.isEmpty
-                      ? const Center(child: CircularProgressIndicator())
-                      : HistoryTab(
-                          items: historyList,
-                          onDelete: (item) => _confirmDelete(item, false),
-                        ),
+              child: _isLoadingHistory && allItems.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : GridView.builder(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                      itemCount: allItems.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 15.w,
+                        mainAxisSpacing: 15.h,
+                        childAspectRatio: 0.85,
+                      ),
+                      itemBuilder: (context, index) {
+                        final item = allItems[index];
+
+                        Widget bottomWidget;
+                        if (item.status == 'pending' || item.progress < 1.0) {
+                           bottomWidget = Column(
+                             mainAxisAlignment: MainAxisAlignment.center,
+                             children: [
+                               LinearProgressIndicator(
+                                 value: item.progress,
+                                 color: AppColors.primary,
+                                 backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                               ),
+                               SizedBox(height: 5.h),
+                               Text("${(item.progress * 100).toInt()}%", style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
+                             ],
+                           );
+                        } else if (item.extractedItems == null || item.extractedItems!.isEmpty) {
+                           bottomWidget = Center(child: Text("Waiting...", style: TextStyle(color: Colors.grey, fontSize: 12.sp)));
+                        } else {
+                           bottomWidget = ListView(
+                             scrollDirection: Axis.horizontal,
+                             children: item.extractedItems!.map((e) => e.category).toSet().take(2).map((tag) => Container(
+                               margin: EdgeInsets.only(right: 5.w),
+                               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                               decoration: BoxDecoration(
+                                 color: AppColors.primary,
+                                 borderRadius: BorderRadius.circular(4),
+                               ),
+                               child: Center(
+                                 child: Text(tag, style: TextStyle(color: Colors.white, fontSize: 10.sp)),
+                               ),
+                             )).toList(),
+                           );
+                        }
+
+                        return GestureDetector(
+                          onTap: () {
+                            if (isSelectionMode) {
+                              toggleItemSelection(item);
+                            } else {
+                              if (item.status == 'completed' || item.progress == 1.0) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ItemDetailsView(item: item),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: ScanItemCard(
+                            imageFile: item.imageFile,
+                            imageUrl: item.imageUrl,
+                            bottomContent: bottomWidget,
+                            isSelectionMode: isSelectionMode,
+                            isSelected: selectedItems.contains(item),
+                          ),
+                        );
+                      },
+                    ),
             ),
+
+            if (isSelectionMode)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -2))
+                  ]
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "${selectedItems.length} Selected",
+                      style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: AppColors.primary),
+                    ),
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: (selectedItems.isNotEmpty && !_isDeleting) ? _confirmDelete : null,
+                          child: Column(
+                            children: [
+                              if (_isDeleting)
+                                SizedBox(width: 24.w, height: 24.h, child: const CircularProgressIndicator(strokeWidth: 2))
+                              else
+                                CustomSvgWrapper(
+                                  path: AppAssets.delete,
+                                  iconWidth: 24.w,
+                                  iconHeight: 24.h,
+                                  color: selectedItems.isNotEmpty ? Colors.red : Colors.grey,
+                                ),
+                              SizedBox(height: 4.h),
+                              Text("Delete", style: TextStyle(color: selectedItems.isNotEmpty ? Colors.red : Colors.grey, fontSize: 12.sp)),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 20.w),
+                        InkWell(
+                          onTap: selectedItems.isNotEmpty ? () {} : null,
+                          child: Column(
+                            children: [
+                              Icon(Icons.public, color: selectedItems.isNotEmpty ? AppColors.primary : Colors.grey),
+                              SizedBox(height: 4.h),
+                              Text("Make Public", style: TextStyle(color: selectedItems.isNotEmpty ? AppColors.primary : Colors.grey, fontSize: 12.sp)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              )
           ],
         ),
-      ),
-      
-      bottomNavigationBar: CustomBottomNav(
-        onCameraTap: _pickImageFromCamera,
       ),
     );
   }
