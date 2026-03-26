@@ -77,7 +77,7 @@ class _BrowsePageState extends State<BrowsePage> {
 
   @override
   Widget build(BuildContext context) {
-    String userName = "aya";
+    final userName = ModalRoute.of(context)!.settings.arguments as String;
     List<ScanItemModel> userHistory = widget.homeKey.currentState?.historyList ?? [];
 
     return Scaffold(
