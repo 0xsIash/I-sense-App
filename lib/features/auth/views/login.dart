@@ -116,16 +116,11 @@ class _LoginState extends State<Login> {
                             });
 
                             try {
-                              await _authService.login(
-                                emailController.text.trim(), 
-                                passwordController.text,
-                              );
-                              
                               String userName = await _authService.login(
                                 emailController.text.trim(),
                                 passwordController.text,
                               );
-
+                              
                               if (context.mounted) {
                                 Navigator.pushReplacementNamed(context, "home",arguments: userName);
                               }

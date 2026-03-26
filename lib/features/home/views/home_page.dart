@@ -239,7 +239,7 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    String userName = "aya"; 
+    final userName = ModalRoute.of(context)!.settings.arguments as String;
     List<ScanItemModel> allItems = [...processingList, ...historyList];
 
     return Scaffold(
