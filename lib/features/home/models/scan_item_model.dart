@@ -17,7 +17,8 @@ class ScanItemModel {
   double? totalCost; 
 
   List<ExtractedItemModel>? extractedItems;
-
+  bool isPublic;
+  
   ScanItemModel({
     this.id,
     this.imageId,
@@ -29,6 +30,7 @@ class ScanItemModel {
     this.progress = 0.0,    
     this.isDeleted = false, 
     this.totalCost,
+    this.isPublic = false,
   });
 
   bool get isCompleted => status == 'completed';
@@ -58,6 +60,7 @@ class ScanItemModel {
     }
 
     String serverStatus = json['status'] ?? 'pending';
+    bool publicStatus = json['is_public'] ?? false;
 
     return ScanItemModel(
       id: json['id'],
@@ -68,7 +71,7 @@ class ScanItemModel {
       status: serverStatus,
       progress: serverStatus == 'completed' ? 1.0 : 0.0,
       isDeleted: false,
-      
+      isPublic: publicStatus,
       extractedItems: items,
     );
   }

@@ -1,14 +1,13 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:isense/features/home/widgets/browse_tab.dart';
+import 'package:isense/features/home/widgets/item_details_view.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/features/home/views/home_page.dart';
-import 'package:isense/features/home/models/scan_item_model.dart';
-import 'package:isense/features/home/widgets/scan_item_card.dart';
 import 'package:isense/features/home/widgets/custom_drawer.dart';
-import 'package:isense/features/home/widgets/item_details_view.dart';
+import 'package:isense/features/home/views/home_page.dart';
+import 'dart:math';
 
 class BrowsePage extends StatefulWidget {
   final GlobalKey<HomePageState> homeKey;
@@ -23,13 +22,15 @@ class _BrowsePageState extends State<BrowsePage> {
   bool isBrowseMode = true;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // الدالة دي بتوزع صورك كدبابيس على الخريطة بشكل عشوائي حوالين القاهرة مؤقتاً
-  List<Marker> _buildMarkers(List<ScanItemModel> history) {
+  // دالة لتوليد دبابيس عشوائية على الخريطة
+  List<Marker> _buildMarkers() {
     final random = Random();
-    final double baseLat = 30.0444; 
-    final double baseLng = 31.2357; 
+    final double baseLat = 30.0444;
+    final double baseLng = 31.2357;
 
-    return history.map((item) {
+    final userHistory = widget.homeKey.currentState?.historyList ?? [];
+
+    return userHistory.map((item) {
       double latOffset = (random.nextDouble() - 0.5) * 0.02;
       double lngOffset = (random.nextDouble() - 0.5) * 0.02;
 
@@ -41,7 +42,8 @@ class _BrowsePageState extends State<BrowsePage> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ItemDetailsView(item: item)),
+              MaterialPageRoute(
+                  builder: (context) => ItemDetailsView(item: item)),
             );
           },
           child: Column(
@@ -62,8 +64,8 @@ class _BrowsePageState extends State<BrowsePage> {
                   borderRadius: BorderRadius.circular(6.r),
                   child: item.imageFile != null
                       ? Image.file(item.imageFile!, fit: BoxFit.cover)
-                      : (item.imageUrl != null 
-                          ? Image.network(item.imageUrl!, fit: BoxFit.cover) 
+                      : (item.imageUrl != null
+                          ? Image.network(item.imageUrl!, fit: BoxFit.cover)
                           : const Icon(Icons.image, size: 20)),
                 ),
               ),
@@ -77,8 +79,7 @@ class _BrowsePageState extends State<BrowsePage> {
 
   @override
   Widget build(BuildContext context) {
-    final userName = ModalRoute.of(context)!.settings.arguments as String;
-    List<ScanItemModel> userHistory = widget.homeKey.currentState?.historyList ?? [];
+    String userName = ModalRoute.of(context)!.settings.arguments as String;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -88,7 +89,6 @@ class _BrowsePageState extends State<BrowsePage> {
         child: Column(
           children: [
             SizedBox(height: 15.h),
-            
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
@@ -115,9 +115,9 @@ class _BrowsePageState extends State<BrowsePage> {
                 ],
               ),
             ),
-
             SizedBox(height: 25.h),
 
+            // التبديل بين Browse / Map
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Container(
@@ -176,6 +176,7 @@ class _BrowsePageState extends State<BrowsePage> {
 
             SizedBox(height: 20.h),
 
+            // زر البحث والكاميرا
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
@@ -226,87 +227,29 @@ class _BrowsePageState extends State<BrowsePage> {
 
             SizedBox(height: 20.h),
 
+            // الجزء الرئيسي: BrowseTab أو الخريطة
             Expanded(
-              child: isBrowseMode ? _buildBrowseGrid(userHistory) : _buildRealMap(userHistory),
+              child: isBrowseMode
+                  ? const BrowseTab() // هنا الـ BrowseTab بيجيب الصور من API مباشرة
+                  : FlutterMap(
+                      options: MapOptions(
+                        initialCenter: const LatLng(30.0444, 31.2357),
+                        initialZoom: 13.0,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.isense.app',
+                        ),
+                        MarkerLayer(
+                          markers: _buildMarkers(),
+                        ),
+                      ],
+                    ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildBrowseGrid(List<ScanItemModel> userHistory) {
-    if (userHistory.isEmpty) {
-      return Center(
-        child: Text("No items found", style: TextStyle(color: Colors.grey, fontSize: 16.sp)),
-      );
-    }
-
-    return GridView.builder(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-      itemCount: userHistory.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 15.w,
-        mainAxisSpacing: 15.h,
-        childAspectRatio: 0.85,
-      ),
-      itemBuilder: (context, index) {
-        final item = userHistory[index];
-        
-        Widget bottomWidget;
-        if (item.extractedItems != null && item.extractedItems!.isNotEmpty) {
-           bottomWidget = ListView(
-             scrollDirection: Axis.horizontal,
-             children: item.extractedItems!.map((e) => e.category).toSet().take(2).map((tag) => Container(
-               margin: EdgeInsets.only(right: 5.w),
-               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-               decoration: BoxDecoration(
-                 color: AppColors.primary,
-                 borderRadius: BorderRadius.circular(4),
-               ),
-               child: Center(
-                 child: Text(tag, style: TextStyle(color: Colors.white, fontSize: 10.sp)),
-               ),
-             )).toList(),
-           );
-        } else {
-           bottomWidget = Center(child: Text("Completed", style: TextStyle(color: Colors.grey, fontSize: 12.sp)));
-        }
-
-        return GestureDetector(
-          onTap: () {
-             Navigator.push(
-               context,
-               MaterialPageRoute(builder: (context) => ItemDetailsView(item: item)),
-             );
-          },
-          child: ScanItemCard(
-            imageFile: item.imageFile,
-            imageUrl: item.imageUrl,
-            bottomContent: bottomWidget,
-          ),
-        );
-      },
-    );
-  }
-
-  // ده كود الخريطة الحقيقية التفاعلية
-  Widget _buildRealMap(List<ScanItemModel> userHistory) {
-    return FlutterMap(
-      options: MapOptions(
-        initialCenter: const LatLng(30.0444, 31.2357), // احداثيات افتراضية
-        initialZoom: 13.0,
-      ),
-      children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.isense.app', 
-        ),
-        MarkerLayer(
-          markers: _buildMarkers(userHistory),
-        ),
-      ],
     );
   }
 }

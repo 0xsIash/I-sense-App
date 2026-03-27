@@ -73,7 +73,9 @@ class HomePageState extends State<HomePage> {
           item.extractedItems = objects;
         });
       }
-    } catch (e) {}
+    } catch (e) {
+      //
+    }
   }
 
   Future<void> pickImageFromCamera() async {
@@ -94,7 +96,9 @@ class HomePageState extends State<HomePage> {
 
         _uploadAndProcessImage(newItem);
       }
-    } catch (e) {}
+    } catch (e) {
+      //
+    }
   }
 
   Future<void> _uploadAndProcessImage(ScanItemModel item) async {
@@ -429,12 +433,61 @@ class HomePageState extends State<HomePage> {
                         ),
                         SizedBox(width: 20.w),
                         InkWell(
-                          onTap: selectedItems.isNotEmpty ? () {} : null,
+                          onTap: selectedItems.isNotEmpty
+                              ? () async {
+                                  int successCount = 0;
+
+                                  // نعمل publish لكل صورة محددة
+                                  for (var item in selectedItems) {
+                                    if (!item.isPublic && item.imageId != null) {
+                                      bool result = await _jobService.publishImage(item.imageId!);
+                                      if (result) {
+                                        setState(() {
+                                          item.isPublic = true; // تحديث الحالة في UI
+                                        });
+                                        successCount++;
+                                      }
+                                    }
+                                  }
+
+                                  // بعد ما نخلص، نرجع للوضع الطبيعي
+                                  setState(() {
+                                    isSelectionMode = false; // نخرج من selection mode
+                                    selectedItems.clear();    // نمسح الـ selection
+                                  });
+
+                                  // نعرض رسالة للمستخدم بعدد الصور اللي اتعملها share
+                                  if (successCount > 0) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("$successCount item(s) shared successfully!"),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text("No items were shared."),
+                                        backgroundColor: Colors.orange,
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
                           child: Column(
                             children: [
-                              Icon(Icons.public, color: selectedItems.isNotEmpty ? AppColors.primary : Colors.grey),
+                              Icon(
+                                Icons.public,
+                                color: selectedItems.isNotEmpty ? AppColors.primary : Colors.grey,
+                              ),
                               SizedBox(height: 4.h),
-                              Text("Make Public", style: TextStyle(color: selectedItems.isNotEmpty ? AppColors.primary : Colors.grey, fontSize: 12.sp)),
+                              Text(
+                                "Make Public",
+                                style: TextStyle(
+                                  color: selectedItems.isNotEmpty ? AppColors.primary : Colors.grey,
+                                  fontSize: 12.sp,
+                                ),
+                              ),
                             ],
                           ),
                         ),

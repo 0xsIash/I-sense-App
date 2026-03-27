@@ -9,4 +9,8 @@ class ApiConstants {
   static String getImageObjectsEndpoint(int imageId) => "/images/$imageId/objects";
   static String deleteImageEndpoint(int imageId) => "/images/$imageId";
   static String getAllImagesEndpoint = "/images";
+
+  static String getPublishedImages = "/share/feed";
+  static String publishImage(int imageId) => "/share/$imageId/publish";
+  
 }

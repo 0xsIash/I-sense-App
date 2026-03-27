@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isense/core/utils/api_constants.dart';
 import 'package:isense/features/home/models/extracted_item_model.dart';
 import 'package:isense/features/home/models/scan_item_model.dart';
+import 'dart:convert'; 
+import 'package:http/http.dart' as http;
 
 class JobService {
   final Dio _dio = Dio();
@@ -54,6 +56,18 @@ class JobService {
     }
   }
 
+  Future<List<ScanItemModel>> getPublishedImages() async {
+  final response = await _dio.get(ApiConstants.getPublishedImages);
+
+  if (response.statusCode == 200) {
+    List data = response.data;
+
+    return data.map((e) => ScanItemModel.fromJson(e)).toList();
+  } else {
+    throw Exception("Failed to load images");
+  }
+}
+
   Future<List<ScanItemModel>> getUserHistory() async {
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -84,6 +98,8 @@ class JobService {
     }
   }
 
+  
+
   Future<void> deleteImage(int imageId) async {
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -95,4 +111,38 @@ class JobService {
       options: Options(headers: {"Authorization": "Bearer $token"}),
     );
   }
+
+
+  // job_service.dart
+Future<bool> publishImage(int imageId) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    final String url = "${ApiConstants.baseUrl}${ApiConstants.publishImage(imageId)}";
+
+    final response = await _dio.post(
+      url,
+      data: {
+        "latitude": 0,
+        "longitude": 0,
+        "location_name": "",
+        "description": "",
+      },
+      options: Options(
+        headers: {"Authorization": "Bearer $token"},
+      ),
+    );
+
+    // لو الكود 200 يبقى نجح
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (e) {
+    debugPrint("Failed to publish image: $e");
+    return false;
+  }
+}
 }
