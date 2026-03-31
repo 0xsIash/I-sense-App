@@ -2,10 +2,14 @@ import 'package:isense/core/utils/api_constants.dart';
 
 class ExtractedItemModel {
   final int? id;
-  final String name;      
-  final String category;  
-  final double price;     
+  final String name;
+  final String category;
+  final double price;
   final String? imageUrl;
+  final double? bbX;
+  final double? bbY;
+  final double? bbWidth;
+  final double? bbHeight;
 
   ExtractedItemModel({
     this.id,
@@ -13,6 +17,10 @@ class ExtractedItemModel {
     required this.category,
     required this.price,
     this.imageUrl,
+    this.bbX,
+    this.bbY,
+    this.bbWidth,
+    this.bbHeight,
   });
 
   factory ExtractedItemModel.fromJson(Map<String, dynamic> json) {
@@ -28,7 +36,6 @@ class ExtractedItemModel {
     }
 
     String categoryName = json['object_category'] ?? json['object_label'] ?? 'Object';
-
     String specificName = categoryName;
     if (geminiData != null && geminiData['product_name'] != null) {
       specificName = geminiData['product_name'].toString();
@@ -47,12 +54,19 @@ class ExtractedItemModel {
       itemPrice = (json['price'] is num) ? (json['price'] as num).toDouble() : 0.0;
     }
 
+    // Parse bounding box
+    final bbox = json['bounding_box'];
+
     return ExtractedItemModel(
       id: json['object_id'] ?? json['id'],
-      name: specificName,   
-      category: categoryName, 
-      price: itemPrice,     
+      name: specificName,
+      category: categoryName,
+      price: itemPrice,
       imageUrl: fullImageUrl,
+      bbX: (bbox?['x'] as num?)?.toDouble(),
+      bbY: (bbox?['y'] as num?)?.toDouble(),
+      bbWidth: (bbox?['width'] as num?)?.toDouble(),
+      bbHeight: (bbox?['height'] as num?)?.toDouble(),
     );
   }
 }

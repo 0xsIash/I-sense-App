@@ -41,7 +41,7 @@ class ScanItemModel {
 
   factory ScanItemModel.fromJson(Map<String, dynamic> json) {
     String? fullImageUrl;
-    String? rawPath = json['file_name'] ?? json['image_url'] ?? json['url'] ?? json['original_url'];
+    String? rawPath = json['file_name'] ?? json['annotated_url'] ?? json['url'] ?? json['original_url'];
 
     if (rawPath != null) {
       if (rawPath.startsWith('http')) {
