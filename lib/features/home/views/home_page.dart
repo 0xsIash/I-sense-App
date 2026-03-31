@@ -78,28 +78,33 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> pickImageFromCamera() async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.camera);
+Future<void> pickImageFromCamera() async {
+  try {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: Platform.isAndroid || Platform.isIOS 
+          ? ImageSource.camera 
+          : ImageSource.gallery,
+    );
 
-      if (image != null) {
-        final newItem = ScanItemModel(
-          imageFile: File(image.path),
-          progress: 0.1,
-          status: 'pending',
-        );
+    if (image != null) {
+      final newItem = ScanItemModel(
+        imageFile: File(image.path),
+        progress: 0.1,
+        status: 'pending',
+      );
 
-        setState(() {
-          processingList.insert(0, newItem);
-        });
+      setState(() {
+        processingList.insert(0, newItem);
+      });
 
-        _uploadAndProcessImage(newItem);
-      }
-    } catch (e) {
-      //
+      _uploadAndProcessImage(newItem);
     }
+  } catch (e) {
+    //
   }
+}
+
 
   Future<void> _uploadAndProcessImage(ScanItemModel item) async {
     try {

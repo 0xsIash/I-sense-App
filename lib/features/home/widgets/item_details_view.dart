@@ -4,8 +4,9 @@ import 'package:isense/core/utils/app_assets.dart';
 import 'package:isense/core/utils/app_colors.dart';
 import 'package:isense/core/widgets/custom_svg_wrapper.dart';
 import 'package:isense/features/home/models/scan_item_model.dart';
-import 'package:isense/features/home/widgets/extracted_item_card.dart'; 
+import 'package:isense/features/home/widgets/extracted_item_card.dart';
 import 'package:isense/features/home/widgets/similar_items_sheet.dart';
+import 'package:isense/features/home/widgets/interactive_canvas_page.dart';
 
 class ItemDetailsView extends StatelessWidget {
   final ScanItemModel item;
@@ -48,21 +49,51 @@ class ItemDetailsView extends StatelessWidget {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20.r),
-                  color: Colors.grey[200], 
+                  color: Colors.grey[200],
                   image: headerImage != null
                       ? DecorationImage(
                           image: headerImage,
                           fit: BoxFit.cover,
                         )
-                      : null, 
+                      : null,
                 ),
                 child: headerImage == null
                     ? Icon(Icons.image, size: 50.sp, color: Colors.grey[400])
                     : null,
               ),
-              
+
               SizedBox(height: 15.h),
 
+              // ── Arrange Objects Button ──────────────────────────
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => InteractiveCanvasPage(item: item),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.open_with, color: Colors.white),
+                  label: Text(
+                    "Arrange Objects",
+                    style: TextStyle(color: Colors.white, fontSize: 14.sp),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    minimumSize: Size(double.infinity, 45.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 15.h),
+
+              // ── Tags ───────────────────────────────────────────
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Column(
@@ -78,36 +109,43 @@ class ItemDetailsView extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 8.h),
-                    
-                    tags.isEmpty 
-                    ? Text("No tags detected", style: TextStyle(color: Colors.grey, fontSize: 12.sp))
-                    : Wrap(
-                      spacing: 8.w,
-                      runSpacing: 8.h,
-                      children: tags.map((tag) => Chip(
-                        label: Text(
-                          tag,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12.sp,
-                            fontFamily: 'Kreon',
+
+                    tags.isEmpty
+                        ? Text(
+                            "No tags detected",
+                            style: TextStyle(color: Colors.grey, fontSize: 12.sp),
+                          )
+                        : Wrap(
+                            spacing: 8.w,
+                            runSpacing: 8.h,
+                            children: tags
+                                .map((tag) => Chip(
+                                      label: Text(
+                                        tag,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12.sp,
+                                          fontFamily: 'Kreon',
+                                        ),
+                                      ),
+                                      backgroundColor: AppColors.primary,
+                                      padding: EdgeInsets.zero,
+                                      labelPadding: EdgeInsets.symmetric(
+                                          horizontal: 10.w),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      side: BorderSide.none,
+                                    ))
+                                .toList(),
                           ),
-                        ),
-                        backgroundColor: AppColors.primary,
-                        padding: EdgeInsets.zero,
-                        labelPadding: EdgeInsets.symmetric(horizontal: 10.w),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        side: BorderSide.none,
-                      )).toList(),
-                    ),
                   ],
                 ),
               ),
 
               SizedBox(height: 15.h),
 
+              // ── Total Cost ─────────────────────────────────────
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Row(
@@ -143,6 +181,7 @@ class ItemDetailsView extends StatelessWidget {
 
               SizedBox(height: 15.h),
 
+              // ── Extracted Items ────────────────────────────────
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Text(
@@ -157,40 +196,39 @@ class ItemDetailsView extends StatelessWidget {
 
               SizedBox(height: 10.h),
 
-              extractedList.isEmpty 
-              ? Padding(
-                  padding: EdgeInsets.all(20.h),
-                  child: Center(child: Text("No items detected yet.")),
-                )
-              : GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-                  itemCount: extractedList.length, 
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 15.w,
-                    mainAxisSpacing: 15.h,
-                    childAspectRatio: 0.70,
-                  ),
-                  itemBuilder: (context, index) {
-                    final extractedItem = extractedList[index];
+              extractedList.isEmpty
+                  ? Padding(
+                      padding: EdgeInsets.all(20.h),
+                      child: const Center(child: Text("No items detected yet.")),
+                    )
+                  : GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 20.w, vertical: 10.h),
+                      itemCount: extractedList.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 15.w,
+                        mainAxisSpacing: 15.h,
+                        childAspectRatio: 0.70,
+                      ),
+                      itemBuilder: (context, index) {
+                        final extractedItem = extractedList[index];
 
-                    return ExtractedItemCard(
-                      item: extractedItem,
-                      
-                      mainImageFile: item.imageFile, 
-                      
-                      onFindSimilar: () {
-                        showModalBottomSheet(
-                          context: context,
-                          backgroundColor: Colors.transparent,
-                          builder: (context) => const SimilarItemsSheet(),
+                        return ExtractedItemCard(
+                          item: extractedItem,
+                          mainImageFile: item.imageFile,
+                          onFindSimilar: () {
+                            showModalBottomSheet(
+                              context: context,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => const SimilarItemsSheet(),
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
 
               SizedBox(height: 20.h),
             ],
