@@ -17,7 +17,6 @@ class InteractiveCanvasPage extends StatefulWidget {
 class _InteractiveCanvasPageState extends State<InteractiveCanvasPage> {
   late List<DraggableObject> _objects;
 
-  // Original image dimensions from backend (adjust if you know the real size)
   final double _originalImageWidth = 2000;
   final double _originalImageHeight = 1502;
 
@@ -32,7 +31,6 @@ class _InteractiveCanvasPageState extends State<InteractiveCanvasPage> {
         _objects.add(DraggableObject(
           imageUrl: items[i].imageUrl!,
           label: items[i].name,
-          // Use real bounding box if available, fallback to grid layout
           x: items[i].bbX ?? (20 + (i % 2) * 180),
           y: items[i].bbY ?? (20 + (i ~/ 2) * 180),
           width: items[i].bbWidth ?? 150,
@@ -55,13 +53,14 @@ class _InteractiveCanvasPageState extends State<InteractiveCanvasPage> {
       appBar: AppBar(title: const Text("Arrange Objects")),
       body: Column(
         children: [
-          // Canvas takes half the screen
+          // Canvas takes upper part of screen
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                // Scale factor to map original image coords to canvas size
-                final double scaleX = constraints.maxWidth / _originalImageWidth;
-                final double scaleY = constraints.maxHeight / _originalImageHeight;
+                final double scaleX =
+                    constraints.maxWidth / _originalImageWidth;
+                final double scaleY =
+                    constraints.maxHeight / _originalImageHeight;
 
                 return Stack(
                   children: [
@@ -134,10 +133,41 @@ class _InteractiveCanvasPageState extends State<InteractiveCanvasPage> {
       left: obj.x * scaleX,
       top: obj.y * scaleY,
       child: GestureDetector(
+        // Drag to move
         onPanUpdate: (details) {
           setState(() {
             obj.x += details.delta.dx / scaleX;
             obj.y += details.delta.dy / scaleY;
+          });
+        },
+        // Right click → show delete menu
+        onSecondaryTapUp: (details) {
+          showMenu(
+            context: context,
+            position: RelativeRect.fromLTRB(
+              details.globalPosition.dx,
+              details.globalPosition.dy,
+              details.globalPosition.dx + 1,
+              details.globalPosition.dy + 1,
+            ),
+            items: [
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: const [
+                    Icon(Icons.delete, color: Colors.red, size: 18),
+                    SizedBox(width: 8),
+                    Text('Delete', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
+          ).then((value) {
+            if (value == 'delete') {
+              setState(() {
+                _objects.remove(obj);
+              });
+            }
           });
         },
         child: Container(
