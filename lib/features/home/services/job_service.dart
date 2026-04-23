@@ -110,17 +110,14 @@ class JobService {
       options: Options(headers: {"Authorization": "Bearer $token"}),
     );
   }
-  // الدالة دي وظيفتها تجيب التوكن من الـ SharedPreferences عشان نبعته في الـ Headers
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
   }
 
-  // داخل ملف job_service.dart
   Future<List<SimilarProductModel>> getSimilarProducts(int imageId, int objId) async {
     try {
       final token = await _getToken();
-      // الرابط حسب Swagger
       final String url = "${ApiConstants.baseUrl}/similar_products/$imageId/$objId/similar-products";
       
       final response = await _dio.get(url, options: Options(headers: {"Authorization": "Bearer $token"}));
@@ -158,7 +155,6 @@ Future<bool> publishImage(int imageId) async {
       ),
     );
 
-    // لو الكود 200 يبقى نجح
     if (response.statusCode == 200) {
       return true;
     } else {

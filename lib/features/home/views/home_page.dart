@@ -28,7 +28,7 @@ class HomePageState extends State<HomePage> {
   bool _isLoadingHistory = false;
   bool isSelectionMode = false;
   bool _isDeleting = false;
-  bool _isSharing = false; // إضافة حالة للتحميل أثناء المشاركة
+  bool _isSharing = false; 
 
   List<ScanItemModel> processingList = [];
   List<ScanItemModel> historyList = [];
@@ -91,6 +91,7 @@ class HomePageState extends State<HomePage> {
           imageFile: File(image.path),
           progress: 0.1,
           status: 'pending',
+          isPublic: false,
         );
         setState(() => processingList.insert(0, newItem));
         _uploadAndProcessImage(newItem);
@@ -164,7 +165,7 @@ class HomePageState extends State<HomePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirm Deletion'),
-          content: Text('Delete ${selectedItems.length} items?'),
+          content: Text('Delete ${selectedItems.length} image(s)?'),
           actions: <Widget>[
             TextButton(child: const Text('Cancel'), onPressed: () => Navigator.of(context).pop()),
             TextButton(
@@ -194,6 +195,74 @@ class HomePageState extends State<HomePage> {
         _isDeleting = false;
       });
     }
+  }
+
+  Future<void> _shareSelectedItems() async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isSharing = true);
+
+    int successCount = 0;
+    int alreadySharedCount = 0;
+
+    for (var item in List.from(selectedItems)) {
+      if (item.isPublic == true) {
+        alreadySharedCount++;
+        continue;
+      }
+
+      if (item.imageId != null) {
+        bool res = await _jobService.publishImage(item.imageId!);
+        if (res) {
+          successCount++;
+          item.isPublic = true;
+        }
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _isSharing = false;
+        isSelectionMode = false;
+        selectedItems.clear();
+      });
+
+      String message = "";
+      if (successCount > 0) message += "$successCount image(s) shared successfully! ";
+      if (alreadySharedCount > 0) message += "$alreadySharedCount image(s) already public.";
+      if (message.isEmpty) message = "No changes were made.";
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: successCount > 0 ? Colors.green : Colors.orange,
+        ),
+      );
+    }
+  }
+
+  Future<void> _confirmShare() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Sharing'),
+          content: Text('Share ${selectedItems.length} image(s) publicly?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Yes', style: TextStyle(color: Colors.green)),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _shareSelectedItems(); 
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -253,7 +322,6 @@ class HomePageState extends State<HomePage> {
               ),
             ),
             
-            // GridView Wrapped in Expanded to prevent Overflow
             Expanded(
               child: _isLoadingHistory && allItems.isEmpty
                   ? const Center(child: CircularProgressIndicator())
@@ -267,7 +335,6 @@ class HomePageState extends State<HomePage> {
                         childAspectRatio: 0.85,
                       ),
                       itemBuilder: (context, index) {
-                        // 🛠️ حل مشكلة الـ Type Error: نستخدم index مباشرة للوصول للـ Object
                         final item = allItems[index];
 
                         Widget bottomWidget;
@@ -316,7 +383,6 @@ class HomePageState extends State<HomePage> {
                     ),
             ),
 
-            // Action Bar for Selection Mode
             if (isSelectionMode)
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
@@ -331,7 +397,6 @@ class HomePageState extends State<HomePage> {
                     Text("${selectedItems.length} Selected", style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: AppColors.primary)),
                     Row(
                       children: [
-                        // Delete Action
                         InkWell(
                           onTap: (selectedItems.isNotEmpty && !_isDeleting) ? _confirmDelete : null,
                           child: Column(
@@ -345,27 +410,9 @@ class HomePageState extends State<HomePage> {
                           ),
                         ),
                         SizedBox(width: 20.w),
-                        // Share Action (Make Public)
+                        
                         InkWell(
-                          onTap: selectedItems.isNotEmpty && !_isSharing ? () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            setState(() => _isSharing = true);
-                            int successCount = 0;
-                            for (var item in List.from(selectedItems)) {
-                              if (item.imageId != null) {
-                                bool res = await _jobService.publishImage(item.imageId!);
-                                if (res) successCount++;
-                              }
-                            }
-                            if (mounted) {
-                              setState(() {
-                                _isSharing = false;
-                                isSelectionMode = false;
-                                selectedItems.clear();
-                              });
-                              messenger.showSnackBar(SnackBar(content: Text("$successCount items shared!"), backgroundColor: Colors.green));
-                            }
-                          } : null,
+                          onTap: selectedItems.isNotEmpty && !_isSharing ? _confirmShare : null,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
