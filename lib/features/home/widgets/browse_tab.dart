@@ -32,10 +32,8 @@ class _BrowseTabState extends State<BrowseTab> {
     _loadImages();
   }
 
-  // الدالة المسؤولة عن جلب البيانات وتحديث القائمة
   Future<void> _loadImages() async {
     try {
-      // نستخدم getPublicFeedEndpoint الذي أضفناه سابقاً في ApiConstants
       final response = await _dio.get(ApiConstants.getPublishedImages);
 
       if (response.statusCode == 200) {
@@ -43,7 +41,6 @@ class _BrowseTabState extends State<BrowseTab> {
 
         if (mounted) {
           setState(() {
-            // استخدام fromFeedJson لضمان تركيب روابط الصور بشكل صحيح
             items = data.map((e) => ScanItemModel.fromFeedJson(e, ApiConstants.baseUrl)).toList();
             isLoading = false;
           });
@@ -63,17 +60,15 @@ class _BrowseTabState extends State<BrowseTab> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // إضافة RefreshIndicator للسماح بتحديث الصفحة عند السحب لأسفل
     return RefreshIndicator(
       color: AppColors.primary,
-      onRefresh: _loadImages, // ربط السحب بدالة جلب البيانات
+      onRefresh: _loadImages, 
       child: _buildContent(),
     );
   }
 
   Widget _buildContent() {
     if (items.isEmpty) {
-      // استخدام ListView هنا ضروري ليتمكن المستخدم من السحب لأسفل حتى لو القائمة فارغة
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
@@ -99,7 +94,6 @@ class _BrowseTabState extends State<BrowseTab> {
     }
 
     return GridView.builder(
-      // AlwaysScrollableScrollPhysics تجعل الـ Grid قابلاً للسحب حتى لو كان عدد العناصر قليلاً
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
       itemCount: items.length,

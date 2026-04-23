@@ -22,7 +22,6 @@ class _BrowsePageState extends State<BrowsePage> {
   bool isBrowseMode = true;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // دالة لتوليد دبابيس عشوائية على الخريطة
   List<Marker> _buildMarkers() {
     final random = Random();
     final double baseLat = 30.0444;
@@ -117,7 +116,6 @@ class _BrowsePageState extends State<BrowsePage> {
             ),
             SizedBox(height: 25.h),
 
-            // التبديل بين Browse / Map
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Container(
@@ -176,7 +174,6 @@ class _BrowsePageState extends State<BrowsePage> {
 
             SizedBox(height: 20.h),
 
-            // زر البحث والكاميرا
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
@@ -227,10 +224,9 @@ class _BrowsePageState extends State<BrowsePage> {
 
             SizedBox(height: 20.h),
 
-            // الجزء الرئيسي: BrowseTab أو الخريطة
             Expanded(
               child: isBrowseMode
-                  ? const BrowseTab() // هنا الـ BrowseTab بيجيب الصور من API مباشرة
+                  ? const BrowseTab() 
                   : FlutterMap(
                       options: MapOptions(
                         initialCenter: const LatLng(30.0444, 31.2357),

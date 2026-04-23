@@ -15,13 +15,10 @@ class ItemDetailsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // قائمة العناصر المستخرجة
     final extractedList = item.extractedItems ?? [];
 
-    // حساب السعر الإجمالي مع ضمان تحويل البيانات لنوع double
   final double totalPrice = extractedList.fold(0.0, (sum, e) => sum + e.price);
 
-    // استخراج الـ Tags وحل مشكلة الـ List<dynamic> باستخدام cast<String>
     final List<String> tags = extractedList
         .map((e) => e.name.toString())
         .toSet()
@@ -42,7 +39,6 @@ class ItemDetailsView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // زر العودة
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
                 child: InkWell(
@@ -51,7 +47,6 @@ class ItemDetailsView extends StatelessWidget {
                 ),
               ),
 
-              // صورة المنتج الرئيسية
               Container(
                 margin: EdgeInsets.symmetric(horizontal: 20.w),
                 height: 350.h,
@@ -229,7 +224,6 @@ class ItemDetailsView extends StatelessWidget {
                           item: extractedItem,
                           mainImageFile: item.imageFile,
                           onFindSimilar: () {
-                            // تمرير الـ IDs المطلوبة للـ API
                             showModalBottomSheet(
                               context: context,
                               isScrollControlled: true,

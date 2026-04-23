@@ -33,14 +33,12 @@ class ScanItemModel {
     this.isPublic = false,
   });
 
-  // مساعد للتحقق من حالة الاكتمال
   bool get isCompleted => status == 'completed';
   
   set isCompleted(bool value) {
     status = value ? 'completed' : 'pending';
   }
 
-  // 1️⃣ الدالة الأساسية لتحويل JSON العام
   factory ScanItemModel.fromJson(Map<String, dynamic> json) {
     String? fullImageUrl;
     String? rawPath = json['file_name'] ?? json['annotated_url'] ?? json['url'] ?? json['original_url'];
@@ -77,24 +75,20 @@ class ScanItemModel {
     );
   }
 
-  // 2️⃣ الدالة المخصصة للـ Public Feed (صفحة Browse)
   factory ScanItemModel.fromFeedJson(Map<String, dynamic> json, String baseUrl) {
     String? fullImageUrl;
-    // في الـ Feed السيرفر غالباً يرسل image_url أو annotated_url
     String? rawPath = json['image_url'] ?? json['annotated_url'] ?? json['original_url'];
 
     if (rawPath != null) {
       if (rawPath.startsWith('http')) {
         fullImageUrl = rawPath;
       } else {
-        // تنظيف الروابط لضمان عدم وجود // زائدة
         String cleanBase = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
         String cleanPath = rawPath.startsWith('/') ? rawPath : '/$rawPath';
         fullImageUrl = "$cleanBase$cleanPath";
       }
     }
 
-    // معالجة العناصر المستخرجة إذا كانت موجودة في الـ Feed
     List<ExtractedItemModel> items = [];
     if (json['extracted_items'] != null) {
       items = (json['extracted_items'] as List)
@@ -113,7 +107,6 @@ class ScanItemModel {
     );
   }
 
-  // 3️⃣ الدالة المخصصة لسجل المستخدم (History)
   factory ScanItemModel.fromHistoryJson(Map<String, dynamic> json) {
     String? fullImageUrl;
     String? rawPath = json['original_url'] ?? json['annotated_url']; 
@@ -144,7 +137,8 @@ class ScanItemModel {
       progress: 1.0,       
       isDeleted: false,
       totalCost: cost,
-      extractedItems: [], // يتم تحميلها لاحقاً في الخلفية
+      isPublic: json['is_public'] ?? false,
+      extractedItems: [], 
     );
   }
 }
