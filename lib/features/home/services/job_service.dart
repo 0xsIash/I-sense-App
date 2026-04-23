@@ -1,11 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:isense/features/home/models/similar_product_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isense/core/utils/api_constants.dart';
 import 'package:isense/features/home/models/extracted_item_model.dart';
 import 'package:isense/features/home/models/scan_item_model.dart';
-import 'dart:convert'; 
-import 'package:http/http.dart' as http;
 
 class JobService {
   final Dio _dio = Dio();
@@ -110,6 +109,31 @@ class JobService {
       url, 
       options: Options(headers: {"Authorization": "Bearer $token"}),
     );
+  }
+  // الدالة دي وظيفتها تجيب التوكن من الـ SharedPreferences عشان نبعته في الـ Headers
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
+  // داخل ملف job_service.dart
+  Future<List<SimilarProductModel>> getSimilarProducts(int imageId, int objId) async {
+    try {
+      final token = await _getToken();
+      // الرابط حسب Swagger
+      final String url = "${ApiConstants.baseUrl}/similar_products/$imageId/$objId/similar-products";
+      
+      final response = await _dio.get(url, options: Options(headers: {"Authorization": "Bearer $token"}));
+
+      if (response.statusCode == 200) {
+        List<dynamic> productsJson = response.data['products'] ?? [];
+        return productsJson.map((json) => SimilarProductModel.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint("🔴 Error fetching similar products: $e");
+      return [];
+    }
   }
 
 

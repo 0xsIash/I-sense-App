@@ -33,12 +33,14 @@ class ScanItemModel {
     this.isPublic = false,
   });
 
+  // مساعد للتحقق من حالة الاكتمال
   bool get isCompleted => status == 'completed';
   
   set isCompleted(bool value) {
     status = value ? 'completed' : 'pending';
   }
 
+  // 1️⃣ الدالة الأساسية لتحويل JSON العام
   factory ScanItemModel.fromJson(Map<String, dynamic> json) {
     String? fullImageUrl;
     String? rawPath = json['file_name'] ?? json['annotated_url'] ?? json['url'] ?? json['original_url'];
@@ -67,7 +69,6 @@ class ScanItemModel {
       imageId: json['image_id'],
       jobId: json['job_id'],
       imageUrl: fullImageUrl,
-      
       status: serverStatus,
       progress: serverStatus == 'completed' ? 1.0 : 0.0,
       isDeleted: false,
@@ -76,9 +77,46 @@ class ScanItemModel {
     );
   }
 
+  // 2️⃣ الدالة المخصصة للـ Public Feed (صفحة Browse)
+  factory ScanItemModel.fromFeedJson(Map<String, dynamic> json, String baseUrl) {
+    String? fullImageUrl;
+    // في الـ Feed السيرفر غالباً يرسل image_url أو annotated_url
+    String? rawPath = json['image_url'] ?? json['annotated_url'] ?? json['original_url'];
+
+    if (rawPath != null) {
+      if (rawPath.startsWith('http')) {
+        fullImageUrl = rawPath;
+      } else {
+        // تنظيف الروابط لضمان عدم وجود // زائدة
+        String cleanBase = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+        String cleanPath = rawPath.startsWith('/') ? rawPath : '/$rawPath';
+        fullImageUrl = "$cleanBase$cleanPath";
+      }
+    }
+
+    // معالجة العناصر المستخرجة إذا كانت موجودة في الـ Feed
+    List<ExtractedItemModel> items = [];
+    if (json['extracted_items'] != null) {
+      items = (json['extracted_items'] as List)
+          .map((e) => ExtractedItemModel.fromJson(e))
+          .toList();
+    }
+
+    return ScanItemModel(
+      id: json['image_id'] ?? json['id'],
+      imageId: json['image_id'] ?? json['id'],
+      imageUrl: fullImageUrl,
+      status: 'completed',
+      isPublic: true,
+      progress: 1.0,
+      extractedItems: items,
+    );
+  }
+
+  // 3️⃣ الدالة المخصصة لسجل المستخدم (History)
   factory ScanItemModel.fromHistoryJson(Map<String, dynamic> json) {
     String? fullImageUrl;
-    String? rawPath = json['original_url']; 
+    String? rawPath = json['original_url'] ?? json['annotated_url']; 
 
     if (rawPath != null) {
       if (rawPath.startsWith('http')) {
@@ -93,7 +131,7 @@ class ScanItemModel {
     if (json['total_cost'] != null) {
       cost = (json['total_cost'] is int) 
           ? (json['total_cost'] as int).toDouble() 
-          : (json['total_cost'] as double);
+          : double.tryParse(json['total_cost'].toString());
     }
 
     return ScanItemModel(
@@ -102,13 +140,11 @@ class ScanItemModel {
       jobId: json['id'],
       imageUrl: fullImageUrl, 
       imageFile: null,
-      
       status: 'completed', 
       progress: 1.0,       
       isDeleted: false,
       totalCost: cost,
-      
-      extractedItems: [], 
+      extractedItems: [], // يتم تحميلها لاحقاً في الخلفية
     );
   }
 }

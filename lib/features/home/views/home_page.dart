@@ -28,6 +28,7 @@ class HomePageState extends State<HomePage> {
   bool _isLoadingHistory = false;
   bool isSelectionMode = false;
   bool _isDeleting = false;
+  bool _isSharing = false; // إضافة حالة للتحميل أثناء المشاركة
 
   List<ScanItemModel> processingList = [];
   List<ScanItemModel> historyList = [];
@@ -74,45 +75,35 @@ class HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      //
+      debugPrint("Error fetching objects: $e");
     }
   }
 
-Future<void> pickImageFromCamera() async {
-  try {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-      source: Platform.isAndroid || Platform.isIOS 
-          ? ImageSource.camera 
-          : ImageSource.gallery,
-    );
-
-    if (image != null) {
-      final newItem = ScanItemModel(
-        imageFile: File(image.path),
-        progress: 0.1,
-        status: 'pending',
+  Future<void> pickImageFromCamera() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: Platform.isAndroid || Platform.isIOS ? ImageSource.camera : ImageSource.gallery,
       );
 
-      setState(() {
-        processingList.insert(0, newItem);
-      });
-
-      _uploadAndProcessImage(newItem);
+      if (image != null) {
+        final newItem = ScanItemModel(
+          imageFile: File(image.path),
+          progress: 0.1,
+          status: 'pending',
+        );
+        setState(() => processingList.insert(0, newItem));
+        _uploadAndProcessImage(newItem);
+      }
+    } catch (e) {
+      debugPrint("Picker Error: $e");
     }
-  } catch (e) {
-    //
   }
-}
-
 
   Future<void> _uploadAndProcessImage(ScanItemModel item) async {
     try {
-      setState(() { item.progress = 0.2; });
-
       if (item.imageFile != null) {
         final responseData = await _imageService.uploadImage(item.imageFile!);
-        
         setState(() {
           item.id = responseData['id'];
           item.jobId = responseData['job_id'];
@@ -123,25 +114,13 @@ Future<void> pickImageFromCamera() async {
         String status = "pending";
         while (status != "completed" && status != "failed" && !item.isDeleted) {
           await Future.delayed(const Duration(seconds: 2)); 
-          if (item.isDeleted) break; 
-          
-          try {
-            status = await _jobService.checkJobStatus(item.jobId!);
-          } catch (e) {
-            if (item.isDeleted) break; 
-          }
-
-          if (mounted && item.progress < 0.8 && !item.isDeleted) {
-             setState(() { item.progress += 0.1; });
-          }
-
-          if (status == "failed") throw Exception("Job processing failed on server.");
+          status = await _jobService.checkJobStatus(item.jobId!);
+          if (mounted && item.progress < 0.8) setState(() => item.progress += 0.1);
+          if (status == "failed") throw Exception("Processing failed");
         }
 
-        if (item.isDeleted) return; 
-
-        setState(() { item.progress = 0.9; });
-        
+        if (item.isDeleted) return;
+        setState(() => item.progress = 0.9);
         final objects = await _jobService.getImageObjects(item.imageId!);
 
         if (mounted) {
@@ -150,20 +129,14 @@ Future<void> pickImageFromCamera() async {
             item.progress = 1.0;
             item.isCompleted = true;
             item.status = 'completed';
-            
             processingList.remove(item);
             historyList.insert(0, item);
           });
         }
       }
     } catch (e) {
-      if (mounted && !item.isDeleted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-        );
-        setState(() {
-           processingList.remove(item);
-        });
+      if (mounted) {
+        setState(() => processingList.remove(item));
       }
     }
   }
@@ -171,9 +144,7 @@ Future<void> pickImageFromCamera() async {
   void toggleSelectionMode() {
     setState(() {
       isSelectionMode = !isSelectionMode;
-      if (!isSelectionMode) {
-        selectedItems.clear();
-      }
+      if (!isSelectionMode) selectedItems.clear();
     });
   }
 
@@ -190,18 +161,14 @@ Future<void> pickImageFromCamera() async {
   Future<void> _confirmDelete() async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Confirm Deletion', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Text('Are you sure you want to delete ${selectedItems.length} items?\nThis action cannot be undone.'),
+          title: const Text('Confirm Deletion'),
+          content: Text('Delete ${selectedItems.length} items?'),
           actions: <Widget>[
+            TextButton(child: const Text('Cancel'), onPressed: () => Navigator.of(context).pop()),
             TextButton(
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
               onPressed: () {
                 Navigator.of(context).pop();
                 deleteSelectedItems();
@@ -215,40 +182,23 @@ Future<void> pickImageFromCamera() async {
 
   Future<void> deleteSelectedItems() async {
     setState(() => _isDeleting = true);
-
-    List<ScanItemModel> itemsToDelete = List.from(selectedItems);
-
-    for (var item in itemsToDelete) {
-      item.isDeleted = true;
+    for (var item in List.from(selectedItems)) {
       final int targetId = item.imageId ?? item.id ?? 0;
-      
-      if (targetId != 0) {
-        try {
-          await _jobService.deleteImage(targetId);
-        } catch (e) {
-          debugPrint("Failed to delete item from server: $e");
-        }
-      }
+      if (targetId != 0) await _jobService.deleteImage(targetId);
     }
-
     if (mounted) {
       setState(() {
-        historyList.removeWhere((item) => itemsToDelete.contains(item));
-        processingList.removeWhere((item) => itemsToDelete.contains(item));
+        historyList.removeWhere((item) => selectedItems.contains(item));
         isSelectionMode = false;
         selectedItems.clear();
         _isDeleting = false;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Items deleted successfully"), backgroundColor: Colors.green),
-      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final userName = ModalRoute.of(context)!.settings.arguments as String;
+    final userName = (ModalRoute.of(context)!.settings.arguments as String?) ?? "User";
     List<ScanItemModel> allItems = [...processingList, ...historyList];
 
     return Scaffold(
@@ -258,10 +208,9 @@ Future<void> pickImageFromCamera() async {
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: 15.h),
-            
+            // Header
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -272,14 +221,7 @@ Future<void> pickImageFromCamera() async {
                         child: Icon(Icons.menu, color: AppColors.primary, size: 28.sp),
                       ),
                       SizedBox(width: 12.w),
-                      Text(
-                        "Hello $userName !",
-                        style: TextStyle(
-                          fontSize: 22.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
+                      Text("Hello $userName !", style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: AppColors.primary)),
                     ],
                   ),
                   Icon(Icons.notifications_none, color: AppColors.primary, size: 28.sp),
@@ -287,10 +229,9 @@ Future<void> pickImageFromCamera() async {
               ),
             ),
             
-            SizedBox(height: 30.h),
-            
+            // Section Title
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -298,32 +239,21 @@ Future<void> pickImageFromCamera() async {
                     children: [
                       Icon(Icons.history, color: AppColors.primary, size: 24.sp),
                       SizedBox(width: 8.w),
-                      Text(
-                        "Recent Uploads",
-                        style: TextStyle(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
+                      Text("Recent Uploads", style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: AppColors.primary)),
                     ],
                   ),
                   CustomBtn(
                     text: isSelectionMode ? "Cancel" : "Select",
-                    btnWidth: 90.w,
-                    btnHeight: 35.h,
+                    btnWidth: 90.w, btnHeight: 35.h,
                     onPressed: toggleSelectionMode,
-                    weight: FontWeight.bold,
-                    size: 14.sp,
-                    fontFamily: 'Nunito Sans',
-                    eleveation: 0,
+                    weight: FontWeight.bold, size: 14.sp,
+                    fontFamily: 'Nunito Sans', eleveation: 0,
                   ),
                 ],
               ),
             ),
             
-            SizedBox(height: 20.h),
-            
+            // GridView Wrapped in Expanded to prevent Overflow
             Expanded(
               child: _isLoadingHistory && allItems.isEmpty
                   ? const Center(child: CircularProgressIndicator())
@@ -337,6 +267,7 @@ Future<void> pickImageFromCamera() async {
                         childAspectRatio: 0.85,
                       ),
                       itemBuilder: (context, index) {
+                        // 🛠️ حل مشكلة الـ Type Error: نستخدم index مباشرة للوصول للـ Object
                         final item = allItems[index];
 
                         Widget bottomWidget;
@@ -350,24 +281,17 @@ Future<void> pickImageFromCamera() async {
                                  backgroundColor: AppColors.primary.withValues(alpha: 0.2),
                                ),
                                SizedBox(height: 5.h),
-                               Text("${(item.progress * 100).toInt()}%", style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
+                               Text("${(item.progress * 100).toInt()}%", style: TextStyle(fontSize: 10.sp, color: Colors.grey)),
                              ],
                            );
-                        } else if (item.extractedItems == null || item.extractedItems!.isEmpty) {
-                           bottomWidget = Center(child: Text("Waiting...", style: TextStyle(color: Colors.grey, fontSize: 12.sp)));
                         } else {
                            bottomWidget = ListView(
                              scrollDirection: Axis.horizontal,
-                             children: item.extractedItems!.map((e) => e.category).toSet().take(2).map((tag) => Container(
+                             children: (item.extractedItems ?? []).map((e) => e.category).toSet().take(2).map((tag) => Container(
                                margin: EdgeInsets.only(right: 5.w),
                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                               decoration: BoxDecoration(
-                                 color: AppColors.primary,
-                                 borderRadius: BorderRadius.circular(4),
-                               ),
-                               child: Center(
-                                 child: Text(tag, style: TextStyle(color: Colors.white, fontSize: 10.sp)),
-                               ),
+                               decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(4)),
+                               child: Center(child: Text(tag.toString(), style: TextStyle(color: Colors.white, fontSize: 10.sp))),
                              )).toList(),
                            );
                         }
@@ -376,15 +300,8 @@ Future<void> pickImageFromCamera() async {
                           onTap: () {
                             if (isSelectionMode) {
                               toggleItemSelection(item);
-                            } else {
-                              if (item.status == 'completed' || item.progress == 1.0) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ItemDetailsView(item: item),
-                                  ),
-                                );
-                              }
+                            } else if (item.isCompleted) {
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => ItemDetailsView(item: item)));
                             }
                           },
                           child: ScanItemCard(
@@ -399,100 +316,63 @@ Future<void> pickImageFromCamera() async {
                     ),
             ),
 
+            // Action Bar for Selection Mode
             if (isSelectionMode)
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -2))
-                  ]
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -2))]
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "${selectedItems.length} Selected",
-                      style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: AppColors.primary),
-                    ),
+                    Text("${selectedItems.length} Selected", style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: AppColors.primary)),
                     Row(
                       children: [
+                        // Delete Action
                         InkWell(
                           onTap: (selectedItems.isNotEmpty && !_isDeleting) ? _confirmDelete : null,
                           child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (_isDeleting)
-                                SizedBox(width: 24.w, height: 24.h, child: const CircularProgressIndicator(strokeWidth: 2))
-                              else
-                                CustomSvgWrapper(
-                                  path: AppAssets.delete,
-                                  iconWidth: 24.w,
-                                  iconHeight: 24.h,
-                                  color: selectedItems.isNotEmpty ? Colors.red : Colors.grey,
-                                ),
+                              if (_isDeleting) SizedBox(width: 24.w, height: 24.h, child: const CircularProgressIndicator(strokeWidth: 2))
+                              else CustomSvgWrapper(path: AppAssets.delete, iconWidth: 24.w, iconHeight: 24.h, color: selectedItems.isNotEmpty ? Colors.red : Colors.grey),
                               SizedBox(height: 4.h),
                               Text("Delete", style: TextStyle(color: selectedItems.isNotEmpty ? Colors.red : Colors.grey, fontSize: 12.sp)),
                             ],
                           ),
                         ),
                         SizedBox(width: 20.w),
+                        // Share Action (Make Public)
                         InkWell(
-                          onTap: selectedItems.isNotEmpty
-                              ? () async {
-                                  int successCount = 0;
-
-                                  // نعمل publish لكل صورة محددة
-                                  for (var item in selectedItems) {
-                                    if (!item.isPublic && item.imageId != null) {
-                                      bool result = await _jobService.publishImage(item.imageId!);
-                                      if (result) {
-                                        setState(() {
-                                          item.isPublic = true; // تحديث الحالة في UI
-                                        });
-                                        successCount++;
-                                      }
-                                    }
-                                  }
-
-                                  // بعد ما نخلص، نرجع للوضع الطبيعي
-                                  setState(() {
-                                    isSelectionMode = false; // نخرج من selection mode
-                                    selectedItems.clear();    // نمسح الـ selection
-                                  });
-
-                                  // نعرض رسالة للمستخدم بعدد الصور اللي اتعملها share
-                                  if (successCount > 0) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text("$successCount item(s) shared successfully!"),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("No items were shared."),
-                                        backgroundColor: Colors.orange,
-                                      ),
-                                    );
-                                  }
-                                }
-                              : null,
+                          onTap: selectedItems.isNotEmpty && !_isSharing ? () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            setState(() => _isSharing = true);
+                            int successCount = 0;
+                            for (var item in List.from(selectedItems)) {
+                              if (item.imageId != null) {
+                                bool res = await _jobService.publishImage(item.imageId!);
+                                if (res) successCount++;
+                              }
+                            }
+                            if (mounted) {
+                              setState(() {
+                                _isSharing = false;
+                                isSelectionMode = false;
+                                selectedItems.clear();
+                              });
+                              messenger.showSnackBar(SnackBar(content: Text("$successCount items shared!"), backgroundColor: Colors.green));
+                            }
+                          } : null,
                           child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.public,
-                                color: selectedItems.isNotEmpty ? AppColors.primary : Colors.grey,
-                              ),
+                              if (_isSharing) SizedBox(width: 24.w, height: 24.h, child: const CircularProgressIndicator(strokeWidth: 2))
+                              else Icon(Icons.public, color: selectedItems.isNotEmpty ? AppColors.primary : Colors.grey, size: 24.sp),
                               SizedBox(height: 4.h),
-                              Text(
-                                "Make Public",
-                                style: TextStyle(
-                                  color: selectedItems.isNotEmpty ? AppColors.primary : Colors.grey,
-                                  fontSize: 12.sp,
-                                ),
-                              ),
+                              Text("Public", style: TextStyle(color: selectedItems.isNotEmpty ? AppColors.primary : Colors.grey, fontSize: 12.sp)),
                             ],
                           ),
                         ),
