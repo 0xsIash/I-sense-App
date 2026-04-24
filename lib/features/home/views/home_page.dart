@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:isense/core/utils/app_colors.dart';
 import 'package:isense/core/utils/app_assets.dart';
+import 'package:isense/core/widgets/custom_header.dart';
 import 'package:isense/features/home/models/scan_item_model.dart';
 import 'package:isense/features/home/services/image_service.dart';
 import 'package:isense/features/home/services/job_service.dart';
@@ -12,6 +13,7 @@ import 'package:isense/features/home/widgets/custom_drawer.dart';
 import 'package:isense/features/home/widgets/item_details_view.dart';
 import 'package:isense/core/widgets/custom_btn.dart';
 import 'package:isense/core/widgets/custom_svg_wrapper.dart';
+import 'package:isense/features/home/widgets/notification_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -277,26 +279,15 @@ class HomePageState extends State<HomePage> {
       body: SafeArea(
         child: Column(
           children: [
+            SizedBox(height: 15.h),
+
             // Header
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => _scaffoldKey.currentState!.openDrawer(),
-                        child: Icon(Icons.menu, color: AppColors.primary, size: 28.sp),
-                      ),
-                      SizedBox(width: 12.w),
-                      Text("Hello $userName !", style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: AppColors.primary)),
-                    ],
-                  ),
-                  Icon(Icons.notifications_none, color: AppColors.primary, size: 28.sp),
-                ],
-              ),
-            ),
+              CustomHeader(
+                      userName: userName,
+                      scaffoldKey: _scaffoldKey,
+                      processingCount: processingList.length,
+                      historyCount: historyList.length,
+                    ),
             
             // Section Title
             Padding(
