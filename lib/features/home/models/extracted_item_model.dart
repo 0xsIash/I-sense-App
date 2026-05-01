@@ -32,18 +32,20 @@ class ExtractedItemModel {
 
     Map<String, dynamic>? geminiData;
     if (json['object_metadata'] != null && json['object_metadata']['gemini'] != null) {
-      geminiData = json['object_metadata']['gemini'];
+      var gemini = json['object_metadata']['gemini'];
+      if (gemini is Map<String, dynamic>) {
+        geminiData = gemini;
+      }
     }
 
     String categoryName = json['object_category'] ?? json['object_label'] ?? 'Object';
-    String specificName = categoryName;
-    if (geminiData != null && geminiData['product_name'] != null) {
-      specificName = geminiData['product_name'].toString();
-    }
+
+    String specificName = geminiData?['name']?.toString() ?? categoryName;
 
     double itemPrice = 0.0;
-    if (geminiData != null && geminiData['average_price_EGP'] != null) {
-      var priceRaw = geminiData['average_price_EGP'];
+
+    if (geminiData != null && geminiData['price'] != null) {
+      var priceRaw = geminiData['price'];
       if (priceRaw is num) {
         itemPrice = priceRaw.toDouble();
       } else if (priceRaw is String) {
@@ -54,7 +56,6 @@ class ExtractedItemModel {
       itemPrice = (json['price'] is num) ? (json['price'] as num).toDouble() : 0.0;
     }
 
-    // Parse bounding box
     final bbox = json['bounding_box'];
 
     return ExtractedItemModel(

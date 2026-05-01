@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:isense/core/utils/app_colors.dart';
 import 'package:isense/features/home/widgets/custom_drawer.dart';
 import 'package:isense/features/home/views/home_page.dart';
+import 'package:isense/core/widgets/custom_header.dart'; 
 import 'dart:math';
 
 class BrowsePage extends StatefulWidget {
@@ -42,7 +43,8 @@ class _BrowsePageState extends State<BrowsePage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => ItemDetailsView(item: item)),
+                builder: (context) => ItemDetailsView(item: item),
+              ),
             );
           },
           child: Column(
@@ -56,7 +58,11 @@ class _BrowsePageState extends State<BrowsePage> {
                   borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(color: AppColors.primary, width: 2),
                   boxShadow: const [
-                    BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    )
                   ],
                 ),
                 child: ClipRRect(
@@ -78,7 +84,7 @@ class _BrowsePageState extends State<BrowsePage> {
 
   @override
   Widget build(BuildContext context) {
-    String userName = ModalRoute.of(context)!.settings.arguments as String;
+    String userName = (ModalRoute.of(context)!.settings.arguments as String?) ?? "User";
 
     return Scaffold(
       key: _scaffoldKey,
@@ -88,32 +94,14 @@ class _BrowsePageState extends State<BrowsePage> {
         child: Column(
           children: [
             SizedBox(height: 15.h),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => _scaffoldKey.currentState!.openDrawer(),
-                        child: Icon(Icons.menu, color: AppColors.primary, size: 28.sp),
-                      ),
-                      SizedBox(width: 12.w),
-                      Text(
-                        "Hello $userName !",
-                        style: TextStyle(
-                          fontSize: 22.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Icon(Icons.notifications_none, color: AppColors.primary, size: 28.sp),
-                ],
-              ),
+            
+            CustomHeader(
+              userName: userName,
+              scaffoldKey: _scaffoldKey,
+              processingCount: widget.homeKey.currentState?.processingList.length ?? 0,
+              historyCount: widget.homeKey.currentState?.historyList.length ?? 0,
             ),
+            
             SizedBox(height: 25.h),
 
             Padding(
@@ -131,7 +119,7 @@ class _BrowsePageState extends State<BrowsePage> {
                         onTap: () => setState(() => isBrowseMode = true),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: isBrowseMode ? AppColors.primary.withValues(alpha: 0.15) : Colors.transparent,
+                            color: isBrowseMode ? AppColors.primary.withValues(alpha:0.15) : Colors.transparent,
                             borderRadius: BorderRadius.horizontal(left: Radius.circular(24.r)),
                           ),
                           alignment: Alignment.center,
