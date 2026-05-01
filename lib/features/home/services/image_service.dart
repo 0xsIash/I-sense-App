@@ -7,11 +7,16 @@ class ImageService {
   final Dio _dio = Dio(
     BaseOptions(
       baseUrl: ApiConstants.baseUrl,
-      validateStatus: (status) => true, 
+      validateStatus: (status) => true,
     ),
   );
 
-  Future<Map<String, dynamic>> uploadImage(File imageFile) async {
+  Future<Map<String, dynamic>> uploadImage(
+    File imageFile, {
+    double? latitude,
+    double? longitude,
+    String? locationName,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
@@ -27,6 +32,9 @@ class ImageService {
           imageFile.path,
           filename: fileName,
         ),
+        "latitude": latitude,
+        "longitude": longitude,
+        "location_name": locationName,
       });
 
       Response response = await _dio.post(
@@ -34,14 +42,14 @@ class ImageService {
         data: formData,
         options: Options(
           headers: {
-            "Content-Type": "multipart/form-data", 
+            "Content-Type": "multipart/form-data",
             "Authorization": "Bearer $token"
           },
         ),
       );
 
       if (response.statusCode == 200) {
-        return response.data; 
+        return response.data;
       } else {
         throw Exception("Server Error: ${response.statusCode} - ${response.data}");
       }

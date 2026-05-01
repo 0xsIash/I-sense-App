@@ -37,11 +37,16 @@ class _BrowseTabState extends State<BrowseTab> {
       final response = await _dio.get(ApiConstants.getPublishedImages);
 
       if (response.statusCode == 200) {
-        List data = response.data;
+        final data = response.data;
+        List imagesList = data['images'] ?? [];
+
+        final loadedItems = imagesList
+            .map((e) => ScanItemModel.fromJson(e)) 
+            .toList();
 
         if (mounted) {
           setState(() {
-            items = data.map((e) => ScanItemModel.fromFeedJson(e, ApiConstants.baseUrl)).toList();
+            items = loadedItems;
             isLoading = false;
           });
         }
@@ -62,7 +67,7 @@ class _BrowseTabState extends State<BrowseTab> {
 
     return RefreshIndicator(
       color: AppColors.primary,
-      onRefresh: _loadImages, 
+      onRefresh: _loadImages,
       child: _buildContent(),
     );
   }
@@ -76,7 +81,8 @@ class _BrowseTabState extends State<BrowseTab> {
           Center(
             child: Column(
               children: [
-                Icon(Icons.image_not_supported_outlined, size: 50.sp, color: Colors.grey),
+                Icon(Icons.image_not_supported_outlined,
+                    size: 50.sp, color: Colors.grey),
                 SizedBox(height: 10.h),
                 Text(
                   "No public items found",
@@ -101,7 +107,7 @@ class _BrowseTabState extends State<BrowseTab> {
         crossAxisCount: 2,
         crossAxisSpacing: 15.w,
         mainAxisSpacing: 15.h,
-        childAspectRatio: 0.82,
+        childAspectRatio: 0.85,
       ),
       itemBuilder: (context, index) {
         final item = items[index];
@@ -114,36 +120,36 @@ class _BrowseTabState extends State<BrowseTab> {
     Widget bottomWidget;
 
     if (item.extractedItems != null && item.extractedItems!.isNotEmpty) {
-      bottomWidget = SizedBox(
-        height: 25.h,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          children: item.extractedItems!
-              .map((e) => e.category.toString())
-              .toSet()
-              .take(2)
-              .map((tag) => Container(
-                    margin: EdgeInsets.only(right: 5.w),
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(4.r),
+      bottomWidget = ListView(
+        scrollDirection: Axis.horizontal,
+        children: item.extractedItems!
+            .map((e) => e.category)
+            .toSet() 
+            .take(2) 
+            .map((tag) => Container(
+                  margin: EdgeInsets.only(right: 5.w),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Center(
+                    child: Text(
+                      tag,
+                      style: TextStyle(color: Colors.white, fontSize: 10.sp),
                     ),
-                    child: Center(
-                      child: Text(
-                        tag,
-                        style: TextStyle(color: Colors.white, fontSize: 10.sp),
-                      ),
-                    ),
-                  ))
-              .toList(),
-        ),
+                  ),
+                ))
+            .toList(),
       );
     } else {
       bottomWidget = Center(
         child: Text(
-          "completed",
-          style: TextStyle(color: Colors.grey, fontSize: 11.sp, fontStyle: FontStyle.italic),
+          "completed", 
+          style: TextStyle(
+              color: Colors.grey,
+              fontSize: 11.sp,
+              fontStyle: FontStyle.italic),
         ),
       );
     }

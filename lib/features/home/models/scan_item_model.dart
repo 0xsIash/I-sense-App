@@ -41,7 +41,7 @@ class ScanItemModel {
 
   factory ScanItemModel.fromJson(Map<String, dynamic> json) {
     String? fullImageUrl;
-    String? rawPath = json['file_name'] ?? json['annotated_url'] ?? json['url'] ?? json['original_url'];
+    String? rawPath = json['original_url'];
 
     if (rawPath != null) {
       if (rawPath.startsWith('http')) {
@@ -77,7 +77,7 @@ class ScanItemModel {
 
   factory ScanItemModel.fromFeedJson(Map<String, dynamic> json, String baseUrl) {
     String? fullImageUrl;
-    String? rawPath = json['image_url'] ?? json['annotated_url'] ?? json['original_url'];
+    String? rawPath = json['original_url'];
 
     if (rawPath != null) {
       if (rawPath.startsWith('http')) {
@@ -109,7 +109,7 @@ class ScanItemModel {
 
   factory ScanItemModel.fromHistoryJson(Map<String, dynamic> json) {
     String? fullImageUrl;
-    String? rawPath = json['original_url'] ?? json['annotated_url']; 
+    String? rawPath = json['original_url'];
 
     if (rawPath != null) {
       if (rawPath.startsWith('http')) {

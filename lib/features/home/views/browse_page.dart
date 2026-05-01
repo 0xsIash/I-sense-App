@@ -119,7 +119,7 @@ class _BrowsePageState extends State<BrowsePage> {
                         onTap: () => setState(() => isBrowseMode = true),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: isBrowseMode ? AppColors.primary.withOpacity(0.15) : Colors.transparent,
+                            color: isBrowseMode ? AppColors.primary.withValues(alpha:0.15) : Colors.transparent,
                             borderRadius: BorderRadius.horizontal(left: Radius.circular(24.r)),
                           ),
                           alignment: Alignment.center,
@@ -140,7 +140,7 @@ class _BrowsePageState extends State<BrowsePage> {
                         onTap: () => setState(() => isBrowseMode = false),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: !isBrowseMode ? AppColors.primary.withOpacity(0.15) : Colors.transparent,
+                            color: !isBrowseMode ? AppColors.primary.withValues(alpha: 0.15) : Colors.transparent,
                             borderRadius: BorderRadius.horizontal(right: Radius.circular(24.r)),
                           ),
                           alignment: Alignment.center,
