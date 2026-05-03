@@ -8,7 +8,7 @@ class ScanItemModel {
   int? jobId;
   
   final String? imageUrl; 
-  final File? imageFile;  
+  final File? imageFile;   
   
   String status;
   
@@ -18,6 +18,9 @@ class ScanItemModel {
 
   List<ExtractedItemModel>? extractedItems;
   bool isPublic;
+
+  final double? latitude;
+  final double? longitude;
   
   ScanItemModel({
     this.id,
@@ -31,6 +34,8 @@ class ScanItemModel {
     this.isDeleted = false, 
     this.totalCost,
     this.isPublic = false,
+    this.latitude, 
+    this.longitude, 
   });
 
   bool get isCompleted => status == 'completed';
@@ -41,7 +46,7 @@ class ScanItemModel {
 
   factory ScanItemModel.fromJson(Map<String, dynamic> json) {
     String? fullImageUrl;
-    String? rawPath = json['original_url'];
+    String? rawPath = json['original_url'] ?? json['file_name'] ?? json['url'];
 
     if (rawPath != null) {
       if (rawPath.startsWith('http')) {
@@ -53,8 +58,9 @@ class ScanItemModel {
     }
 
     List<ExtractedItemModel> items = [];
-    if (json['objects'] != null) {
-      items = (json['objects'] as List)
+    var objectsData = json['objects'] ?? json['extracted_items'];
+    if (objectsData != null) {
+      items = (objectsData as List)
           .map((e) => ExtractedItemModel.fromJson(e))
           .toList();
     }
@@ -64,7 +70,7 @@ class ScanItemModel {
 
     return ScanItemModel(
       id: json['id'],
-      imageId: json['image_id'],
+      imageId: json['image_id'] ?? json['id'],
       jobId: json['job_id'],
       imageUrl: fullImageUrl,
       status: serverStatus,
@@ -72,12 +78,14 @@ class ScanItemModel {
       isDeleted: false,
       isPublic: publicStatus,
       extractedItems: items,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 
   factory ScanItemModel.fromFeedJson(Map<String, dynamic> json, String baseUrl) {
     String? fullImageUrl;
-    String? rawPath = json['original_url'];
+    String? rawPath = json['original_url'] ?? json['image_url'];
 
     if (rawPath != null) {
       if (rawPath.startsWith('http')) {
@@ -90,8 +98,9 @@ class ScanItemModel {
     }
 
     List<ExtractedItemModel> items = [];
-    if (json['extracted_items'] != null) {
-      items = (json['extracted_items'] as List)
+    var objectsData = json['objects'] ?? json['extracted_items'];
+    if (objectsData != null) {
+      items = (objectsData as List)
           .map((e) => ExtractedItemModel.fromJson(e))
           .toList();
     }
@@ -104,12 +113,14 @@ class ScanItemModel {
       isPublic: true,
       progress: 1.0,
       extractedItems: items,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 
   factory ScanItemModel.fromHistoryJson(Map<String, dynamic> json) {
     String? fullImageUrl;
-    String? rawPath = json['original_url'];
+    String? rawPath = json['original_url'] ?? json['annotated_url'];
 
     if (rawPath != null) {
       if (rawPath.startsWith('http')) {
@@ -139,6 +150,8 @@ class ScanItemModel {
       totalCost: cost,
       isPublic: json['is_public'] ?? false,
       extractedItems: [], 
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 }

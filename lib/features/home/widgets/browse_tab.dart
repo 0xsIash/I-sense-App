@@ -8,13 +8,15 @@ import 'package:isense/features/home/widgets/scan_item_card.dart';
 import 'package:dio/dio.dart';
 
 class BrowseTab extends StatefulWidget {
-  const BrowseTab({super.key});
+  final Function(List<ScanItemModel>)? onDataLoaded;
+
+  const BrowseTab({super.key, this.onDataLoaded});
 
   @override
-  State<BrowseTab> createState() => _BrowseTabState();
+  State<BrowseTab> createState() => BrowseTabState();
 }
 
-class _BrowseTabState extends State<BrowseTab> {
+class BrowseTabState extends State<BrowseTab> {
   List<ScanItemModel> items = [];
   bool isLoading = true;
 
@@ -40,15 +42,16 @@ class _BrowseTabState extends State<BrowseTab> {
         final data = response.data;
         List imagesList = data['images'] ?? [];
 
-        final loadedItems = imagesList
-            .map((e) => ScanItemModel.fromJson(e)) 
-            .toList();
+        final loadedItems =
+            imagesList.map((e) => ScanItemModel.fromJson(e)).toList();
 
         if (mounted) {
           setState(() {
             items = loadedItems;
             isLoading = false;
           });
+
+          widget.onDataLoaded?.call(loadedItems);
         }
       }
     } catch (e) {
@@ -124,11 +127,12 @@ class _BrowseTabState extends State<BrowseTab> {
         scrollDirection: Axis.horizontal,
         children: item.extractedItems!
             .map((e) => e.category)
-            .toSet() 
-            .take(2) 
+            .toSet()
+            .take(2)
             .map((tag) => Container(
                   margin: EdgeInsets.only(right: 5.w),
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(4.r),
@@ -136,7 +140,8 @@ class _BrowseTabState extends State<BrowseTab> {
                   child: Center(
                     child: Text(
                       tag,
-                      style: TextStyle(color: Colors.white, fontSize: 10.sp),
+                      style:
+                          TextStyle(color: Colors.white, fontSize: 10.sp),
                     ),
                   ),
                 ))
@@ -145,11 +150,12 @@ class _BrowseTabState extends State<BrowseTab> {
     } else {
       bottomWidget = Center(
         child: Text(
-          "completed", 
+          "completed",
           style: TextStyle(
-              color: Colors.grey,
-              fontSize: 11.sp,
-              fontStyle: FontStyle.italic),
+            color: Colors.grey,
+            fontSize: 11.sp,
+            fontStyle: FontStyle.italic,
+          ),
         ),
       );
     }
