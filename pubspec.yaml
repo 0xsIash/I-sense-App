@@ -96,6 +96,10 @@ flutter:
     - family: Nunito Sans
       fonts:
         - asset: assets\fonts\NunitoSans-Regular.ttf
+
+    - family: combo
+      fonts:
+        - asset: assets\fonts\Cambo-Regular.otf
     
   #
   # For details regarding fonts from package dependencies,

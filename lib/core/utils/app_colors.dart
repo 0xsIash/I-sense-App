@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 
 abstract class AppColors {
 
-  static const Color primary = Color(0xff384BA3);
+  static const Color primary = Color(0xFF074D31);
   static const Color unActive = Color(0xffA3A3A3);
   static const Color primaryBackgrond = Color(0xffF9F9F9);
   static const Color secondaryBackgorud = Color(0xffE5E8F3);

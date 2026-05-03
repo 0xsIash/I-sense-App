@@ -32,22 +32,22 @@ class Splash extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Spacer(flex: 2),
+                  SizedBox(height: 80.h),
                   Text(
-                    "I Sense",
+                    "Wujidt",
                     style: TextStyle(
                       fontSize: 80.sp,
                       fontWeight: FontWeight.w400,
                       color: AppColors.primary,
-                      fontFamily: "MervaleScript",
+                      fontFamily: "combo",
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const Spacer(flex: 1),
-                  CustomSvgWrapper(
-                    path: AppAssets.splash_2,
-                    iconWidth: 0.7.sw,
+                  Image.asset(
+                    AppAssets.splash_2,
+                    width: 0.99.sw,
                   ),
-                  const Spacer(flex: 1),
                   CustomBtn(
                     text: "Login",
                     onPressed: () {

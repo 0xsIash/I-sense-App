@@ -3,8 +3,8 @@ abstract class AppAssets {
     static const _imgBasePath = 'assets/imgs/';
 
     //imgs
-    static const String splash_1 = "${_imgBasePath}splash_1.svg";
-    static const String splash_2 = "${_imgBasePath}splash_2.svg";
+    static const String splash_1 = "${_imgBasePath}wujidt_splash_1.svg";
+    static const String splash_2 = "${_imgBasePath}wujidt_splash_2.png";
 
     // icons
     static const String arrowBack = '${_iconBasePath}arrow back.svg';
