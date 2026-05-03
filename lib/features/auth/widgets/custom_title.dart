@@ -14,7 +14,7 @@ class CustomTitle extends StatelessWidget {
         color: AppColors.primary,
         fontWeight: FontWeight.w600,
         fontSize: 56.sp,
-        fontFamily: "Nunito Sans",
+        fontFamily: "Kreon",
       ),
     );
   }

@@ -43,7 +43,9 @@ class _LoginState extends State<Login> {
                 SizedBox(height: 70.h),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: CustomTitle(text: "Log In"),
+                  child: CustomTitle(
+                    text: "Log In",
+                  ),
                 ),
                 SizedBox(height: 40.h),
 
@@ -106,7 +108,7 @@ class _LoginState extends State<Login> {
                         weight: FontWeight.w600,
                         size: 16.sp,
                         eleveation: 8,
-                        fontFamily: 'Nunito Sans',
+                        fontFamily: 'Kreon',
                         
                         onPressed: _isLoading ? () {} : () async { 
                           if (_formKey.currentState!.validate()) {

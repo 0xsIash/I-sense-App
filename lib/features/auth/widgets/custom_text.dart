@@ -18,6 +18,7 @@ class CustomText extends StatelessWidget {
             color: AppColors.primary,
             fontSize: 14,
               fontWeight: FontWeight.w600,
+              fontFamily: 'Kreon'
           ),
         ),
 

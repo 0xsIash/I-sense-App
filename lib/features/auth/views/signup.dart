@@ -146,7 +146,7 @@ class _SignupState extends State<Signup> {
                         weight: FontWeight.w600,
                         size: 16.sp,
                         eleveation: 8,
-                        fontFamily: 'Nunito Sans',
+                        fontFamily: 'Kreon',
                         
                         onPressed: _isLoading ? () {} : () async {
                           if (_formKey.currentState!.validate()) {
@@ -187,7 +187,6 @@ class _SignupState extends State<Signup> {
                                 );
                               }
                             } finally {
-                              // 6. إيقاف التحميل في كل الأحوال
                               if (context.mounted) {
                                 setState(() {
                                   _isLoading = false;
