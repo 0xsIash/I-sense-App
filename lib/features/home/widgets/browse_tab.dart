@@ -51,7 +51,6 @@ class BrowseTabState extends State<BrowseTab> {
             isLoading = false;
           });
 
-          // 👇 إرسال البيانات للـ BrowsePage
           widget.onDataLoaded?.call(loadedItems);
         }
       }

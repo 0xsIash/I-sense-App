@@ -9,7 +9,6 @@ import 'package:isense/features/home/widgets/custom_drawer.dart';
 import 'package:isense/features/home/views/home_page.dart';
 import 'package:isense/core/widgets/custom_header.dart';
 import 'package:isense/features/home/models/scan_item_model.dart';
-import 'dart:math';
 
 class BrowsePage extends StatefulWidget {
   final GlobalKey<HomePageState> homeKey;
@@ -30,9 +29,9 @@ class _BrowsePageState extends State<BrowsePage> {
   return browseItems
       .where((item) => item.latitude != null && item.longitude != null)
       .map((item) {
+        debugPrint("LAT: ${item.latitude}, LNG: ${item.longitude}");
 
-        print("LAT: ${item.latitude}, LNG: ${item.longitude}");
-        
+
     return Marker(
       point: LatLng(item.latitude!, item.longitude!),
       width: 55.w,
@@ -197,12 +196,11 @@ class _BrowsePageState extends State<BrowsePage> {
                         ),
                       ),
                       children: [
-                        // 👇 Tile احترافي (Carto Light)
                         TileLayer(
                           urlTemplate:
                               'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                           subdomains: const ['a', 'b', 'c', 'd'],
-                          retinaMode: true, // 👈 مهم جدًا للجودة
+                          retinaMode: true, 
                           maxZoom: 20,
                           userAgentPackageName: 'com.isense.app',
                         ),
