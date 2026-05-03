@@ -45,6 +45,7 @@ dependencies:
   url_launcher: ^6.3.2
   geolocator: ^14.0.2
   geocoding: ^4.0.0
+  smooth_page_indicator: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -100,6 +101,10 @@ flutter:
     - family: combo
       fonts:
         - asset: assets\fonts\Cambo-Regular.otf
+    
+    - family: IBMPlexSans
+      fonts:
+        - asset: assets\fonts\IBMPlexSans-VariableFont_wdth,wght.ttf
     
   #
   # For details regarding fonts from package dependencies,

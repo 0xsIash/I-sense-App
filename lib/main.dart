@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:isense/features/auth/views/login.dart';
+import 'package:isense/features/auth/views/onboarding.dart';
 import 'package:isense/features/auth/views/signup.dart';
 import 'package:isense/features/auth/views/splash.dart';
 import 'package:isense/features/home/widgets/main_layout.dart';
@@ -28,7 +29,8 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         initialRoute: '/',
       routes: {
-        '/' : (context) => const Splash(),
+        '/' : (context) => const OnboardingView(),
+        'splash': (context) => const Splash(),
         'login' : (context) => const Login(),
         'signup' : (context) => const Signup(),
         'home' : (context) => const MainLayout(),

@@ -5,6 +5,7 @@ abstract class AppAssets {
     //imgs
     static const String splash_1 = "${_imgBasePath}wujidt_splash_1.svg";
     static const String splash_2 = "${_imgBasePath}wujidt_splash_2.png";
+    static const String onboarding1 = "${_imgBasePath}star_onboarding1.svg";
 
     // icons
     static const String arrowBack = '${_iconBasePath}arrow back.svg';

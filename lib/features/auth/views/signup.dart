@@ -141,7 +141,6 @@ class _SignupState extends State<Signup> {
                       CustomBtn(
                         text: _isLoading ? "Creating..." : "Signup",
                         
-                        // تنسيقات الزر (كما هي)
                         btnWidth: 244.w,
                         btnHeight: 32.h,
                         weight: FontWeight.w600,
@@ -149,27 +148,21 @@ class _SignupState extends State<Signup> {
                         eleveation: 8,
                         fontFamily: 'Nunito Sans',
                         
-                        // 2. منطق التشغيل
                         onPressed: _isLoading ? () {} : () async {
-                          // التأكد من صحة البيانات (بما فيها تطابق الباسورد الموجود في الـ TextFields)
                           if (_formKey.currentState!.validate()) {
                             
-                            // بدء التحميل
                             setState(() {
                               _isLoading = true;
                             });
 
                             try {
-                              // 3. إرسال البيانات للسيرفر
                               await _authService.signup(
-                                userName: nameController.text.trim(), // الاسم
-                                email: emailController.text.trim(),   // الإيميل
-                                password: passwordController.text,    // الباسورد
+                                userName: nameController.text.trim(), 
+                                email: emailController.text.trim(),   
+                                password: passwordController.text,    
                               );
 
-                              // 4. في حالة النجاح
                               if (context.mounted) {
-                                // إظهار رسالة نجاح خضراء
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text("Account created successfully! Please Login."),
@@ -178,13 +171,10 @@ class _SignupState extends State<Signup> {
                                   ),
                                 );
                                 
-                                // الانتقال لصفحة تسجيل الدخول
                                 Navigator.pushReplacementNamed(context, "login");
                               }
 
                             } catch (e) {
-                              // 5. في حالة الفشل (مثلاً الإيميل مكرر)
-                              // تنظيف نص الخطأ من كلمة Exception
                               String errorMsg = e.toString().replaceAll("Exception: ", "");
                               
                               if (context.mounted) {
