@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:isense/core/utils/api_constants.dart';
-import 'package:isense/features/home/models/extracted_item_model.dart';
+import 'package:wujidt/core/utils/api_constants.dart';
+import 'package:wujidt/features/home/models/extracted_item_model.dart';
 
 class ScanItemModel {
   int? id;

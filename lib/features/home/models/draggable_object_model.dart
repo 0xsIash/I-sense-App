@@ -1,4 +1,4 @@
-import 'package:isense/features/home/models/extracted_item_model.dart';
+import 'package:wujidt/features/home/models/extracted_item_model.dart';
 class DraggableObject {
   final String imageUrl;
   final String label;

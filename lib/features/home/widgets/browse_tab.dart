@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/core/utils/api_constants.dart';
-import 'package:isense/features/home/models/scan_item_model.dart';
-import 'package:isense/features/home/widgets/item_details_view.dart';
-import 'package:isense/features/home/widgets/scan_item_card.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/core/utils/api_constants.dart';
+import 'package:wujidt/features/home/models/scan_item_model.dart';
+import 'package:wujidt/features/home/widgets/item_details_view.dart';
+import 'package:wujidt/features/home/widgets/scan_item_card.dart';
 import 'package:dio/dio.dart';
 
 class BrowseTab extends StatefulWidget {

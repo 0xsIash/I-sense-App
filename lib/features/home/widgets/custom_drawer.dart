@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_colors.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({
@@ -69,7 +69,8 @@ class CustomDrawer extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF5A5A89),
+                    color: AppColors.primary
+
                   ),
                 ),
               ],

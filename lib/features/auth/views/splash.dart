@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_assets.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/core/widgets/custom_btn.dart';
-import 'package:isense/core/widgets/custom_svg_wrapper.dart';
-import 'package:isense/features/auth/widgets/custom_text.dart';
+import 'package:wujidt/core/utils/app_assets.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/core/widgets/custom_btn.dart';
+import 'package:wujidt/core/widgets/custom_svg_wrapper.dart';
+import 'package:wujidt/features/auth/widgets/custom_text.dart';
 
 class Splash extends StatelessWidget {
   const Splash({super.key});

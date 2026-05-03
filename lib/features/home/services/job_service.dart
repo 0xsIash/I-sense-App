@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:isense/features/home/models/similar_product_model.dart';
+import 'package:wujidt/features/home/models/similar_product_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:isense/core/utils/api_constants.dart';
-import 'package:isense/features/home/models/extracted_item_model.dart';
-import 'package:isense/features/home/models/scan_item_model.dart';
+import 'package:wujidt/core/utils/api_constants.dart';
+import 'package:wujidt/features/home/models/extracted_item_model.dart';
+import 'package:wujidt/features/home/models/scan_item_model.dart';
 
 class JobService {
   final Dio _dio = Dio();

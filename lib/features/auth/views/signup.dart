@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_assets.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/core/utils/validators.dart';
-import 'package:isense/core/widgets/custom_btn.dart';
-import 'package:isense/core/widgets/custom_text_form_field.dart';
-import 'package:isense/features/auth/services/auth_service.dart';
-import 'package:isense/features/auth/widgets/custom_checkbox.dart';
-import 'package:isense/features/auth/widgets/custom_text.dart';
-import 'package:isense/features/auth/widgets/custom_title.dart';
+import 'package:wujidt/core/utils/app_assets.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/core/utils/validators.dart';
+import 'package:wujidt/core/widgets/custom_btn.dart';
+import 'package:wujidt/core/widgets/custom_text_form_field.dart';
+import 'package:wujidt/features/auth/services/auth_service.dart';
+import 'package:wujidt/features/auth/widgets/custom_checkbox.dart';
+import 'package:wujidt/features/auth/widgets/custom_text.dart';
+import 'package:wujidt/features/auth/widgets/custom_title.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});

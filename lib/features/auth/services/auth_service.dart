@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
-import 'package:isense/core/utils/api_constants.dart';
+import 'package:wujidt/core/utils/api_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {

@@ -3,17 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/core/utils/app_assets.dart';
-import 'package:isense/core/widgets/custom_header.dart';
-import 'package:isense/features/home/models/scan_item_model.dart';
-import 'package:isense/features/home/services/image_service.dart';
-import 'package:isense/features/home/services/job_service.dart';
-import 'package:isense/features/home/widgets/scan_item_card.dart';
-import 'package:isense/features/home/widgets/custom_drawer.dart';
-import 'package:isense/features/home/widgets/item_details_view.dart';
-import 'package:isense/core/widgets/custom_btn.dart';
-import 'package:isense/core/widgets/custom_svg_wrapper.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/core/utils/app_assets.dart';
+import 'package:wujidt/core/widgets/custom_header.dart';
+import 'package:wujidt/features/home/models/scan_item_model.dart';
+import 'package:wujidt/features/home/services/image_service.dart';
+import 'package:wujidt/features/home/services/job_service.dart';
+import 'package:wujidt/features/home/widgets/scan_item_card.dart';
+import 'package:wujidt/features/home/widgets/custom_drawer.dart';
+import 'package:wujidt/features/home/widgets/item_details_view.dart';
+import 'package:wujidt/core/widgets/custom_btn.dart';
+import 'package:wujidt/core/widgets/custom_svg_wrapper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

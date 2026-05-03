@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/core/widgets/custom_btn.dart';
-import 'package:isense/features/auth/widgets/onboarding_pages.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/core/widgets/custom_btn.dart';
+import 'package:wujidt/features/auth/widgets/onboarding_pages.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OnboardingView extends StatefulWidget {

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_assets.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/core/widgets/custom_svg_wrapper.dart';
-import 'package:isense/features/home/models/scan_item_model.dart';
-import 'package:isense/features/home/widgets/extracted_item_card.dart';
-import 'package:isense/features/home/widgets/similar_items_sheet.dart';
-import 'package:isense/features/home/widgets/interactive_canvas_page.dart';
+import 'package:wujidt/core/utils/app_assets.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/core/widgets/custom_svg_wrapper.dart';
+import 'package:wujidt/features/home/models/scan_item_model.dart';
+import 'package:wujidt/features/home/widgets/extracted_item_card.dart';
+import 'package:wujidt/features/home/widgets/similar_items_sheet.dart';
+import 'package:wujidt/features/home/widgets/interactive_canvas_page.dart';
 
 class ItemDetailsView extends StatelessWidget {
   final ScanItemModel item;

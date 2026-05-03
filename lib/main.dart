@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/features/auth/views/login.dart';
-import 'package:isense/features/auth/views/onboarding.dart';
-import 'package:isense/features/auth/views/signup.dart';
-import 'package:isense/features/auth/views/splash.dart';
-import 'package:isense/features/home/widgets/main_layout.dart';
+import 'package:wujidt/features/auth/views/login.dart';
+import 'package:wujidt/features/auth/views/onboarding.dart';
+import 'package:wujidt/features/auth/views/signup.dart';
+import 'package:wujidt/features/auth/views/splash.dart';
+import 'package:wujidt/features/home/widgets/main_layout.dart';
 
 // main function
 void main() {

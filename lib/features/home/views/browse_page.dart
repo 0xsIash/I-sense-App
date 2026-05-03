@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:isense/features/home/widgets/browse_tab.dart';
-import 'package:isense/features/home/widgets/item_details_view.dart';
+import 'package:wujidt/features/home/widgets/browse_tab.dart';
+import 'package:wujidt/features/home/widgets/item_details_view.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/features/home/widgets/custom_drawer.dart';
-import 'package:isense/features/home/views/home_page.dart';
-import 'package:isense/core/widgets/custom_header.dart'; 
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/features/home/widgets/custom_drawer.dart';
+import 'package:wujidt/features/home/views/home_page.dart';
+import 'package:wujidt/core/widgets/custom_header.dart'; 
 import 'dart:math';
 
 class BrowsePage extends StatefulWidget {

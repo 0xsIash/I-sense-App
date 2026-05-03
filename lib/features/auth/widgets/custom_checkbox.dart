@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:isense/core/utils/app_colors.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
 
 class CustomCheckbox extends StatelessWidget {
   const CustomCheckbox({

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:isense/features/home/views/home_page.dart';
-import 'package:isense/features/home/views/browse_page.dart';
-import 'package:isense/features/home/widgets/custom_bottom_nav.dart';
+import 'package:wujidt/features/home/views/home_page.dart';
+import 'package:wujidt/features/home/views/browse_page.dart';
+import 'package:wujidt/features/home/widgets/custom_bottom_nav.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
