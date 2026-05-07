@@ -6,12 +6,13 @@ class ScanItemModel {
   int? id;
   int? imageId;
   int? jobId;
+  final int? userId; 
   
   final String? imageUrl; 
   final File? imageFile;   
+  final String? locationName; 
   
   String status;
-  
   double progress;   
   bool isDeleted;    
   double? totalCost; 
@@ -23,11 +24,13 @@ class ScanItemModel {
   final double? longitude;
   
   ScanItemModel({
+    this.userId,
     this.id,
     this.imageId,
     this.jobId,
     this.imageUrl,
     this.imageFile,
+    this.locationName,
     required this.status,
     this.extractedItems,
     this.progress = 0.0,    
@@ -66,17 +69,18 @@ class ScanItemModel {
     }
 
     String serverStatus = json['status'] ?? 'pending';
-    bool publicStatus = json['is_public'] ?? false;
 
     return ScanItemModel(
       id: json['id'],
+      userId: json['user_id'], 
       imageId: json['image_id'] ?? json['id'],
       jobId: json['job_id'],
       imageUrl: fullImageUrl,
+      locationName: json['location_name'] ?? "Unknown Location",
       status: serverStatus,
       progress: serverStatus == 'completed' ? 1.0 : 0.0,
       isDeleted: false,
-      isPublic: publicStatus,
+      isPublic: json['is_public'] ?? false,
       extractedItems: items,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
@@ -107,8 +111,10 @@ class ScanItemModel {
 
     return ScanItemModel(
       id: json['image_id'] ?? json['id'],
+      userId: json['user_id'], 
       imageId: json['image_id'] ?? json['id'],
       imageUrl: fullImageUrl,
+      locationName: json['location_name'] ?? "Unknown Location",
       status: 'completed',
       isPublic: true,
       progress: 1.0,
@@ -140,9 +146,11 @@ class ScanItemModel {
 
     return ScanItemModel(
       id: json['id'],
+      userId: json['user_id'], 
       imageId: json['id'], 
       jobId: json['id'],
       imageUrl: fullImageUrl, 
+      locationName: json['location_name'] ?? "Unknown Location",
       imageFile: null,
       status: 'completed', 
       progress: 1.0,       

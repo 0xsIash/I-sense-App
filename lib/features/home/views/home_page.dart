@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
@@ -81,7 +82,8 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  Future<Position?> _getCurrentLocation() async {
+
+Future<Position?> _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -132,11 +134,29 @@ class HomePageState extends State<HomePage> {
   Future<void> _uploadAndProcessImage(ScanItemModel item, Position? position) async {
     try {
       if (item.imageFile != null) {
+        
+        String finalLocationName = "Unknown Location";
+        
+        if (position != null) {
+          try {
+            List<Placemark> placemarks = await placemarkFromCoordinates(
+              position.latitude, 
+              position.longitude
+            );
+            if (placemarks.isNotEmpty) {
+              Placemark place = placemarks[0];
+              finalLocationName = "${place.locality}, ${place.administrativeArea}";
+            }
+          } catch (e) {
+            finalLocationName = "Current Location";
+          }
+        }
+
         final responseData = await _imageService.uploadImage(
           item.imageFile!,
           latitude: position?.latitude,
           longitude: position?.longitude,
-          locationName: "Current Location",
+          locationName: finalLocationName,
         );
 
         setState(() {

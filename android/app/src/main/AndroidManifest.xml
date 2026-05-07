@@ -13,6 +13,12 @@
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true"> 
+
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyA156WdigDXIUp0UayqtZVoqa8LJBUO7sY"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
