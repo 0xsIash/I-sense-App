@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = "https://said-alabama-super-recommend.trycloudflare.com"; 
+  static const String baseUrl = "https://lovers-scientific-notebooks-aaa.trycloudflare.com"; 
   
   static const String loginEndpoint = "/auth/login";
   static const String signupEndpoint = "/auth/signup";

@@ -31,13 +31,13 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
         color: AppColors.primaryBackgrond,
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
             child: Column(
-              
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: 70.h),
@@ -102,64 +102,69 @@ class _LoginState extends State<Login> {
                     children: [
                       CustomBtn(
                         text: _isLoading ? "Loading..." : "Login",
-                        
                         btnWidth: 244.w,
                         btnHeight: 32.h,
                         weight: FontWeight.w600,
                         size: 16.sp,
                         eleveation: 8,
                         fontFamily: 'Kreon',
-                        
-                        onPressed: _isLoading ? () {} : () async { 
-                          if (_formKey.currentState!.validate()) {
-                            
-                            setState(() {
-                              _isLoading = true;
-                            });
+                        onPressed: _isLoading
+                            ? () {}
+                            : () async {
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() {
+                                    _isLoading = true;
+                                  });
 
-                            try {
-                              String userName = await _authService.login(
-                                emailController.text.trim(),
-                                passwordController.text,
-                              );
-                              
-                              if (context.mounted) {
-                                Navigator.pushReplacementNamed(context, "home",arguments: userName);
-                              }
+                                  try {
+                                    String userName = await _authService.login(
+                                      emailController.text.trim(),
+                                      passwordController.text,
+                                    );
 
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      e.toString().replaceAll("Exception: ", ""), 
-                                      style: const TextStyle(color: Colors.white),
-                                    ),
-                                    backgroundColor: Colors.red,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            } finally {
-                              if (context.mounted) {
-                                setState(() {
-                                  _isLoading = false;
-                                });
-                              }
-                            }
-                          }
-                        },
+                                    if (context.mounted) {
+                                      FocusScope.of(context).unfocus();
+                                      Navigator.pushReplacementNamed(
+                                        context,
+                                        "onboarding",
+                                        arguments: userName,
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            e.toString().replaceAll(
+                                                "Exception: ", ""),
+                                            style: const TextStyle(
+                                                color: Colors.white),
+                                          ),
+                                          backgroundColor: Colors.red,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    if (context.mounted) {
+                                      setState(() {
+                                        _isLoading = false;
+                                      });
+                                    }
+                                  }
+                                }
+                              },
                       ),
-
-
 
                       SizedBox(height: 8.h),
                       SizedBox(
                         width: 244.w,
                         child: CustomText(
-                          question: "Don’t have an account ? ",
+                          question: "Don't have an account ? ",
                           text: "create one!",
                           onTap: () {
+                            FocusScope.of(context).unfocus();
                             Navigator.pushReplacementNamed(context, "signup");
                           },
                         ),

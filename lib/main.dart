@@ -29,8 +29,8 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         initialRoute: '/',
       routes: {
-        '/' : (context) => const OnboardingView(),
-        'splash': (context) => const Splash(),
+        '/': (context) => const Splash(),
+        'onboarding': (context) => const OnboardingView(),
         'login' : (context) => const Login(),
         'signup' : (context) => const Signup(),
         'home' : (context) => const MainLayout(),

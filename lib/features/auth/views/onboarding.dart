@@ -36,6 +36,9 @@ class _OnboardingViewState extends State<OnboardingView>
 
   @override
   Widget build(BuildContext context) {
+    final String userName =
+        (ModalRoute.of(context)?.settings.arguments as String?) ?? "User";
+
     return Scaffold(
       backgroundColor: AppColors.primaryBackgrond,
       appBar: AppBar(
@@ -98,7 +101,11 @@ class _OnboardingViewState extends State<OnboardingView>
                   text: isLastPage ? "Get Started" : "Next  >",
                   onPressed: () {
                     if (isLastPage) {
-                      Navigator.pushReplacementNamed(context, "splash");
+                      Navigator.pushReplacementNamed(
+                        context,
+                        "home",
+                        arguments: userName,
+                      );
                     } else {
                       _pageController.nextPage(
                         duration: const Duration(milliseconds: 500),

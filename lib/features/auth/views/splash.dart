@@ -64,7 +64,7 @@ class Splash extends StatelessWidget {
                   SizedBox(
                     width: 244.w,
                     child: CustomText(
-                      question: "Don’t have an account ? ",
+                      question: "Don't have an account ? ",
                       text: "create one!",
                       onTap: () {
                         Navigator.pushNamed(context, "signup");
