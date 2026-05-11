@@ -7,8 +7,13 @@ import 'package:wujidt/features/home/widgets/item_details_view.dart';
 
 class MapItemCard extends StatelessWidget {
   final ScanItemModel item;
+  final int currentUserId;
 
-  const MapItemCard({super.key, required this.item});
+  const MapItemCard({
+    super.key,
+    required this.item,
+    required this.currentUserId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +34,12 @@ class MapItemCard extends StatelessWidget {
       child: InkWell(
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => ItemDetailsView(item: item)),
+          MaterialPageRoute(
+            builder: (_) => ItemDetailsView(
+              item: item,
+              currentUserId: currentUserId,
+            ),
+          ),
         ),
         child: Row(
           children: [

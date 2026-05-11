@@ -8,11 +8,13 @@ import 'browse_controller.dart';
 class BrowseMapView extends StatelessWidget {
   final BrowseController controller;
   final VoidCallback onMapCreated;
+  final int currentUserId;
 
   const BrowseMapView({
     super.key,
     required this.controller,
     required this.onMapCreated,
+    required this.currentUserId,
   });
 
   @override
@@ -35,13 +37,11 @@ class BrowseMapView extends StatelessWidget {
           onTap: controller.handleMapTap,
         ),
         if (controller.travelInfo.isNotEmpty) _TravelInfoBanner(controller),
-        _SelectedItemCard(controller),
+        _SelectedItemCard(controller, currentUserId),
       ],
     );
   }
 }
-
-// ─── Travel Info Banner ──────────────────────────────────────────────────────
 
 class _TravelInfoBanner extends StatelessWidget {
   final BrowseController controller;
@@ -77,11 +77,11 @@ class _TravelInfoBanner extends StatelessWidget {
   }
 }
 
-
 class _SelectedItemCard extends StatelessWidget {
   final BrowseController controller;
+  final int currentUserId;
 
-  const _SelectedItemCard(this.controller);
+  const _SelectedItemCard(this.controller, this.currentUserId);
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +102,7 @@ class _SelectedItemCard extends StatelessWidget {
               ? MapItemCard(
                   key: ValueKey(controller.selectedItem!.id),
                   item: controller.selectedItem!,
+                  currentUserId: currentUserId,
                 )
               : const SizedBox.shrink(),
         ),

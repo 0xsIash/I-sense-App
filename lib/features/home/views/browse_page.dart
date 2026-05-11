@@ -64,8 +64,11 @@ class _BrowsePageState extends State<BrowsePage> {
 
   @override
   Widget build(BuildContext context) {
-    final String userName =
-        (ModalRoute.of(context)?.settings.arguments as String?) ?? "User";
+    final Map<String, dynamic> args = 
+        (ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?) ?? {};
+    
+    final String userName = args['userName'] ?? "User";
+    final int currentUserId = args['userId'] ?? 0;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -98,6 +101,7 @@ class _BrowsePageState extends State<BrowsePage> {
                     offstage: !_isBrowseMode,
                     child: BrowseTab(
                       key: _browseTabKey,
+                      currentUserId: currentUserId,
                       onDataLoaded: (items) {
                         _controller.browseItems = items;
                         _controller.updateMarkers();
@@ -108,6 +112,7 @@ class _BrowsePageState extends State<BrowsePage> {
                     offstage: _isBrowseMode,
                     child: BrowseMapView(
                       controller: _controller,
+                      currentUserId: currentUserId,
                       onMapCreated: _controller.getCurrentLocation,
                     ),
                   ),

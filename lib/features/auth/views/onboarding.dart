@@ -103,7 +103,7 @@ class _OnboardingViewState extends State<OnboardingView>
                     if (isLastPage) {
                       Navigator.pushReplacementNamed(
                         context,
-                        "home",
+                        "splash",
                         arguments: userName,
                       );
                     } else {

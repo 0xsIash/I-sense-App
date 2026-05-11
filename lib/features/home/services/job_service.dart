@@ -67,6 +67,37 @@ class JobService {
   }
 }
 
+Future<bool> unPublishImage(int imageId) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    debugPrint("Current Token: $token");
+
+    final response = await _dio.post(
+      "${ApiConstants.baseUrl}/share/$imageId/unpublish",
+      options: Options(
+        headers: {
+          "Authorization": "Bearer $token",
+          "Accept": "application/json",
+        },
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      debugPrint("Unpublish Success!");
+      return true;
+    }
+    return false;
+  } on DioException catch (e) {
+    debugPrint("Status Code: ${e.response?.statusCode}");
+    debugPrint("Server Message: ${e.response?.data}");
+    return false;
+  } catch (e) {
+    debugPrint("General Error: $e");
+    return false;
+  }
+}
   Future<List<ScanItemModel>> getUserHistory() async {
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
@@ -134,7 +165,6 @@ class JobService {
   }
 
 
-  // job_service.dart
 Future<bool> publishImage(int imageId) async {
   try {
     final prefs = await SharedPreferences.getInstance();

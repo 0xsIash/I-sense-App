@@ -19,12 +19,9 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
-
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-
   bool isRememberMe = false;
-
   final AuthService _authService = AuthService();
   bool _isLoading = false;
 
@@ -43,12 +40,9 @@ class _LoginState extends State<Login> {
                 SizedBox(height: 70.h),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: CustomTitle(
-                    text: "Log In",
-                  ),
+                  child: CustomTitle(text: "Log In"),
                 ),
                 SizedBox(height: 40.h),
-
                 CustomTextFormField(
                   label: "Email",
                   prefixIcon: AppAssets.email,
@@ -58,16 +52,11 @@ class _LoginState extends State<Login> {
                   iconWidth: 17,
                   iconHeight: 12,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Email is required";
-                    }
-                    if (!isValidEmail(value)) {
-                      return "Enter a valid email";
-                    }
+                    if (value == null || value.isEmpty) return "Email is required";
+                    if (!isValidEmail(value)) return "Enter a valid email";
                     return null;
                   },
                 ),
-
                 CustomTextFormField(
                   label: "Password",
                   prefixIcon: AppAssets.lock,
@@ -77,13 +66,10 @@ class _LoginState extends State<Login> {
                   iconWidth: 12,
                   iconHeight: 15.75,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Password is required";
-                    }
+                    if (value == null || value.isEmpty) return "Password is required";
                     return null;
                   },
                 ),
-
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: CustomCheckbox(
@@ -95,7 +81,6 @@ class _LoginState extends State<Login> {
                     },
                   ),
                 ),
-
                 SizedBox(height: 240.h),
                 Center(
                   child: Column(
@@ -112,51 +97,39 @@ class _LoginState extends State<Login> {
                             ? () {}
                             : () async {
                                 if (_formKey.currentState!.validate()) {
-                                  setState(() {
-                                    _isLoading = true;
-                                  });
-
+                                  setState(() => _isLoading = true);
                                   try {
-                                    String userName = await _authService.login(
+                                    Map<String, dynamic> userData = await _authService.login(
                                       emailController.text.trim(),
                                       passwordController.text,
                                     );
-
                                     if (context.mounted) {
                                       FocusScope.of(context).unfocus();
                                       Navigator.pushReplacementNamed(
                                         context,
-                                        "onboarding",
-                                        arguments: userName,
+                                        "home",
+                                        arguments: {
+                                          'userName': userData['name'],
+                                          'userId': userData['id'],
+                                        },
                                       );
                                     }
                                   } catch (e) {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
+                                      ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text(
-                                            e.toString().replaceAll(
-                                                "Exception: ", ""),
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          ),
+                                          content: Text(e.toString().replaceAll("Exception: ", "")),
                                           backgroundColor: Colors.red,
                                           behavior: SnackBarBehavior.floating,
                                         ),
                                       );
                                     }
                                   } finally {
-                                    if (context.mounted) {
-                                      setState(() {
-                                        _isLoading = false;
-                                      });
-                                    }
+                                    if (context.mounted) setState(() => _isLoading = false);
                                   }
                                 }
                               },
                       ),
-
                       SizedBox(height: 8.h),
                       SizedBox(
                         width: 244.w,

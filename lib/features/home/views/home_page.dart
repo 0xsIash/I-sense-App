@@ -95,7 +95,6 @@ class HomePageState extends State<HomePage> {
   Future<void> pickImage() async {
     try {
       File? imageFile = await ImagePickerHelper.showImageSourceOptions(context);
-
       if (imageFile != null) {
         Position? position = await _getCurrentLocation();
         final newItem = ScanItemModel(
@@ -256,7 +255,10 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final userName = (ModalRoute.of(context)!.settings.arguments as String?) ?? "User";
+    final Map<String, dynamic> args = (ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?) ?? {};
+    final String userName = args['userName'] ?? "User";
+    final int currentUserId = args['userId'] ?? 0;
+    
     List<ScanItemModel> allItems = [...processingList, ...historyList];
 
     return Scaffold(
@@ -304,7 +306,12 @@ class HomePageState extends State<HomePage> {
                                   } else if (item.isCompleted) {
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (_) => ItemDetailsView(item: item)),
+                                      MaterialPageRoute(
+                                        builder: (_) => ItemDetailsView(
+                                          item: item,
+                                          currentUserId: currentUserId,
+                                        ),
+                                      ),
                                     );
                                   }
                                 },
@@ -342,7 +349,7 @@ class HomePageState extends State<HomePage> {
           LinearProgressIndicator(
             value: item.progress,
             color: AppColors.primary,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+            backgroundColor: AppColors.primary.withOpacity(0.2),
           ),
           SizedBox(height: 5.h),
           Text("${(item.progress * 100).toInt()}%", style: TextStyle(fontSize: 10.sp, color: Colors.grey)),
@@ -354,6 +361,7 @@ class HomePageState extends State<HomePage> {
         children: (item.extractedItems ?? [])
             .map((e) => e.category)
             .toSet()
+            .toList()
             .take(2)
             .map((tag) => Container(
                   margin: EdgeInsets.only(right: 5.w),

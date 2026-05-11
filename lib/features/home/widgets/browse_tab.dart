@@ -1,49 +1,41 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import 'package:wujidt/core/utils/api_constants.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
-
 import 'package:wujidt/features/home/models/scan_item_model.dart';
-
 import 'package:wujidt/features/home/widgets/item_details_view.dart';
 import 'package:wujidt/features/home/widgets/scan_item_card.dart';
 
 class BrowseTab extends StatefulWidget {
-  final Function(List<ScanItemModel>)?
-      onDataLoaded;
+  final int currentUserId;
+  final Function(List<ScanItemModel>)? onDataLoaded;
 
   const BrowseTab({
     super.key,
+    required this.currentUserId,
     this.onDataLoaded,
   });
 
   @override
-  State<BrowseTab> createState() =>
-      BrowseTabState();
+  State<BrowseTab> createState() => BrowseTabState();
 }
 
-class BrowseTabState
-    extends State<BrowseTab> {
+class BrowseTabState extends State<BrowseTab> {
   List<ScanItemModel> items = [];
-
   bool isLoading = true;
 
   final Dio _dio = Dio(
     BaseOptions(
       baseUrl: ApiConstants.baseUrl,
-      connectTimeout:
-          const Duration(seconds: 15),
-      receiveTimeout:
-          const Duration(seconds: 15),
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
     ),
   );
 
   @override
   void initState() {
     super.initState();
-
     _loadImages();
   }
 
@@ -63,14 +55,11 @@ class BrowseTabState
 
       if (response.statusCode == 200) {
         final data = response.data;
-
-        List imagesList =
-            data['images'] ?? [];
+        List imagesList = data['images'] ?? [];
 
         final loadedItems = imagesList
             .map(
-              (e) =>
-                  ScanItemModel.fromJson(e),
+              (e) => ScanItemModel.fromJson(e),
             )
             .toList();
 
@@ -80,15 +69,11 @@ class BrowseTabState
             isLoading = false;
           });
 
-          widget.onDataLoaded
-              ?.call(loadedItems);
+          widget.onDataLoaded?.call(loadedItems);
         }
       }
     } catch (e) {
-      debugPrint(
-        "Error loading public images: $e",
-      );
-
+      debugPrint("Error loading public images: $e");
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -101,8 +86,7 @@ class BrowseTabState
   Widget build(BuildContext context) {
     if (isLoading) {
       return const Center(
-        child:
-            CircularProgressIndicator(),
+        child: CircularProgressIndicator(),
       );
     }
 
@@ -116,22 +100,16 @@ class BrowseTabState
   Widget _buildContent() {
     if (items.isEmpty) {
       return ListView(
-        physics:
-            const AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(
-            height:
-                MediaQuery.of(context)
-                        .size
-                        .height *
-                    0.3,
+            height: MediaQuery.of(context).size.height * 0.3,
           ),
           Center(
             child: Column(
               children: [
                 Icon(
-                  Icons
-                      .image_not_supported_outlined,
+                  Icons.image_not_supported_outlined,
                   size: 50.sp,
                   color: Colors.grey,
                 ),
@@ -158,15 +136,13 @@ class BrowseTabState
     }
 
     return GridView.builder(
-      physics:
-          const AlwaysScrollableScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.symmetric(
         horizontal: 20.w,
         vertical: 10.h,
       ),
       itemCount: items.length,
-      gridDelegate:
-          SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 15.w,
         mainAxisSpacing: 15.h,
@@ -174,44 +150,31 @@ class BrowseTabState
       ),
       itemBuilder: (context, index) {
         final item = items[index];
-
         return _buildItemCard(item);
       },
     );
   }
 
-  Widget _buildItemCard(
-    ScanItemModel item,
-  ) {
+  Widget _buildItemCard(ScanItemModel item) {
     Widget bottomWidget;
 
-    if (item.extractedItems != null &&
-        item.extractedItems!
-            .isNotEmpty) {
+    if (item.extractedItems != null && item.extractedItems!.isNotEmpty) {
       bottomWidget = ListView(
-        scrollDirection:
-            Axis.horizontal,
+        scrollDirection: Axis.horizontal,
         children: item.extractedItems!
             .map((e) => e.category)
             .toSet()
             .take(2)
             .map(
               (tag) => Container(
-                margin: EdgeInsets.only(
-                  right: 5.w,
-                ),
-                padding:
-                    EdgeInsets.symmetric(
+                margin: EdgeInsets.only(right: 5.w),
+                padding: EdgeInsets.symmetric(
                   horizontal: 8.w,
                   vertical: 2.h,
                 ),
                 decoration: BoxDecoration(
-                  color:
-                      AppColors.primary,
-                  borderRadius:
-                      BorderRadius.circular(
-                    4.r,
-                  ),
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Center(
                   child: Text(
@@ -233,8 +196,7 @@ class BrowseTabState
           style: TextStyle(
             color: Colors.grey,
             fontSize: 11.sp,
-            fontStyle:
-                FontStyle.italic,
+            fontStyle: FontStyle.italic,
           ),
         ),
       );
@@ -245,9 +207,9 @@ class BrowseTabState
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                ItemDetailsView(
+            builder: (_) => ItemDetailsView(
               item: item,
+              currentUserId: widget.currentUserId,
             ),
           ),
         );
