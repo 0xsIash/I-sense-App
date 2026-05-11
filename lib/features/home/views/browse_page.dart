@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:wujidt/core/widgets/custom_header.dart';
+import 'package:wujidt/core/utils/image_picker_helper.dart';
 import 'package:wujidt/features/home/widgets/browse_controller.dart';
 import 'package:wujidt/features/home/widgets/browse_map_view.dart';
 import 'package:wujidt/features/home/widgets/browse_tab.dart';
 import 'package:wujidt/features/home/widgets/browse_toggle_bar.dart';
 import 'package:wujidt/features/home/widgets/custom_drawer.dart';
+import 'package:wujidt/features/home/widgets/browse_search_bar.dart';
 
 class BrowsePage extends StatefulWidget {
   final GlobalKey homeKey;
@@ -19,6 +22,7 @@ class _BrowsePageState extends State<BrowsePage> {
   final BrowseController _controller = BrowseController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<BrowseTabState> _browseTabKey = GlobalKey<BrowseTabState>();
+  final TextEditingController _searchController = TextEditingController();
 
   bool _isBrowseMode = true;
 
@@ -32,6 +36,7 @@ class _BrowsePageState extends State<BrowsePage> {
   @override
   void dispose() {
     _controller.removeListener(_onControllerUpdate);
+    _searchController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -50,6 +55,13 @@ class _BrowsePageState extends State<BrowsePage> {
     _controller.resetBrowseMode();
   }
 
+  Future<void> _handleCameraTap() async {
+    File? imageFile = await ImagePickerHelper.showImageSourceOptions(context);
+    if (imageFile != null) {
+      debugPrint("Selected image for search: ${imageFile.path}");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final String userName =
@@ -66,6 +78,13 @@ class _BrowsePageState extends State<BrowsePage> {
               scaffoldKey: _scaffoldKey,
               processingCount: 0,
               historyCount: 0,
+            ),
+            BrowseSearchBar(
+              controller: _searchController,
+              onSearch: (query) {
+                debugPrint("Searching for: $query");
+              },
+              onCameraTap: _handleCameraTap,
             ),
             BrowseToggleBar(
               isBrowseMode: _isBrowseMode,

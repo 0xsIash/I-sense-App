@@ -12,6 +12,7 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
+  
   final GlobalKey<HomePageState> _homeKey = GlobalKey<HomePageState>();
 
   @override
@@ -22,14 +23,15 @@ class _MainLayoutState extends State<MainLayout> {
         index: _currentIndex == 2 ? 1 : 0,
         children: [
           HomePage(key: _homeKey),
-          BrowsePage(homeKey: _homeKey),
+          BrowsePage(homeKey: GlobalKey()), 
         ],
       ),
       bottomNavigationBar: CustomBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) {
           if (index == 1) {
-            _homeKey.currentState?.pickImageFromCamera();
+            _homeKey.currentState?.pickImage();
+            
             setState(() => _currentIndex = 0);
           } else {
             setState(() => _currentIndex = index);

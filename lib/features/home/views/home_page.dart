@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/core/utils/image_picker_helper.dart';
 import 'package:wujidt/core/widgets/custom_header.dart';
 import 'package:wujidt/features/home/models/scan_item_model.dart';
 import 'package:wujidt/features/home/services/image_service.dart';
@@ -92,16 +92,14 @@ class HomePageState extends State<HomePage> {
     return await Geolocator.getCurrentPosition();
   }
 
-  Future<void> pickImageFromCamera() async {
+  Future<void> pickImage() async {
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: Platform.isAndroid || Platform.isIOS ? ImageSource.camera : ImageSource.gallery,
-      );
-      if (image != null) {
+      File? imageFile = await ImagePickerHelper.showImageSourceOptions(context);
+
+      if (imageFile != null) {
         Position? position = await _getCurrentLocation();
         final newItem = ScanItemModel(
-          imageFile: File(image.path),
+          imageFile: imageFile,
           progress: 0.1,
           status: 'pending',
           isPublic: false,
