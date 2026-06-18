@@ -92,7 +92,7 @@ class HomePageState extends State<HomePage> {
     return await Geolocator.getCurrentPosition();
   }
 
-  Future<void> pickImage() async {
+  Future<bool> pickImage() async {
     try {
       File? imageFile = await ImagePickerHelper.showImageSourceOptions(context);
       if (imageFile != null) {
@@ -105,9 +105,13 @@ class HomePageState extends State<HomePage> {
         );
         setState(() => processingList.insert(0, newItem));
         _uploadAndProcessImage(newItem, position);
+        
+        return true; 
       }
+      return false; 
     } catch (e) {
       debugPrint("Picker Error: $e");
+      return false; 
     }
   }
 
@@ -349,7 +353,7 @@ class HomePageState extends State<HomePage> {
           LinearProgressIndicator(
             value: item.progress,
             color: AppColors.primary,
-            backgroundColor: AppColors.primary.withOpacity(0.2),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
           ),
           SizedBox(height: 5.h),
           Text("${(item.progress * 100).toInt()}%", style: TextStyle(fontSize: 10.sp, color: Colors.grey)),

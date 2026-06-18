@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wujidt/core/utils/api_constants.dart';
 
@@ -32,17 +31,20 @@ class AuthService {
         final String userName = data['user']['user_name'];
         final int userId = data['user']['id'];
         final String token = data['access_token'];
+        final String? phoneNumber = data['user']['phone_number'];
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
         await prefs.setInt('userId', userId);
         await prefs.setString('userName', userName);
-
-        debugPrint("Login Success: User $userName (ID: $userId)");
+        if (phoneNumber != null) {
+          await prefs.setString('phoneNumber', phoneNumber);
+        }
 
         return {
           'name': userName,
           'id': userId,
+          'phone': phoneNumber,
         };
       } else {
         throw Exception('Login failed with status: ${response.statusCode}');
@@ -57,6 +59,7 @@ class AuthService {
     required String userName,
     required String email,
     required String password,
+    required String phoneNumber,
   }) async {
     try {
       final response = await _dio.post(
@@ -65,11 +68,12 @@ class AuthService {
           'email': email,
           'password': password,
           'user_name': userName,
+          'phone_number': phoneNumber,
         },
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("Signup Success");
+        return;
       } else {
         throw Exception('Signup failed');
       }
@@ -103,6 +107,6 @@ class AuthService {
     await prefs.remove('token');
     await prefs.remove('userId');
     await prefs.remove('userName');
-    debugPrint("User logged out and data cleared.");
+    await prefs.remove('phoneNumber');
   }
 }

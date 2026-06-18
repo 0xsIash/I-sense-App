@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/features/home/widgets/main_layout.dart'; 
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({
@@ -52,48 +53,53 @@ class CustomDrawer extends StatelessWidget {
     return Drawer(
       backgroundColor: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 60),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 60.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 22.r,
-                  backgroundColor: AppColors.secondaryBackgorud,
-                  child: Icon(Icons.person, color: AppColors.primary),
-                ),
-                const SizedBox(width: 15),
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary
-
+            InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                MainLayout.navigationTrigger.value = 3; 
+              },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 22.r,
+                    backgroundColor: AppColors.secondaryBackgorud,
+                    child: Icon(Icons.person, color: AppColors.primary),
                   ),
-                ),
-              ],
+                  SizedBox(width: 15.w),
+                  Text(
+                    userName,
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
             ),
             
-            const SizedBox(height: 30),
+            SizedBox(height: 30.h),
             
             InkWell(
               onTap: () {
                 _confirmLogout(context);
               },
-              child: const Row(
+              child: Row(
                 children: [
                   Text(
                     "Log out",
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
                       color: Colors.red,
                     ),
                   ),
-                  Spacer(),
-                  Icon(Icons.logout, color: Colors.red),
+                  const Spacer(),
+                  const Icon(Icons.logout, color: Colors.red),
                 ],
               ),
             ),

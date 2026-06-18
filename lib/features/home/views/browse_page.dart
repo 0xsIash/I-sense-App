@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
 import 'package:wujidt/core/widgets/custom_header.dart';
 import 'package:wujidt/core/utils/image_picker_helper.dart';
 import 'package:wujidt/features/home/widgets/browse_controller.dart';
@@ -71,6 +72,7 @@ class _BrowsePageState extends State<BrowsePage> {
     final int currentUserId = args['userId'] ?? 0;
 
     return Scaffold(
+      backgroundColor: AppColors.primaryBackgrond,
       key: _scaffoldKey,
       drawer: CustomDrawer(userName: userName),
       body: SafeArea(

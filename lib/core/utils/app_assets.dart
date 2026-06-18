@@ -21,5 +21,6 @@ abstract class AppAssets {
     static const String search = '${_iconBasePath}search.svg';
     static const String shop = '${_iconBasePath}shop.svg';
     static const String searchCamera = '${_iconBasePath}search_camera.svg';
+    static const String phone = '${_iconBasePath}phone.svg';
 }
 

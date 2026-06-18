@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:wujidt/core/utils/app_assets.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
 import 'package:wujidt/core/utils/validators.dart';
@@ -9,6 +10,7 @@ import 'package:wujidt/features/auth/services/auth_service.dart';
 import 'package:wujidt/features/auth/widgets/custom_checkbox.dart';
 import 'package:wujidt/features/auth/widgets/custom_text.dart';
 import 'package:wujidt/features/auth/widgets/custom_title.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -22,9 +24,11 @@ class _SignupState extends State<Signup> {
 
   final nameController = TextEditingController();
   final emailController = TextEditingController();
+  final phoneController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
+  String completePhoneNumber = "";
   bool isRememberMe = false;
   final AuthService _authService = AuthService();
   bool _isLoading = false;
@@ -32,21 +36,21 @@ class _SignupState extends State<Signup> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: AppColors.primaryBackgrond,
+      backgroundColor: AppColors.primaryBackgrond,
+      body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 70.h),
+                SizedBox(height: 30.h),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20),
                   child: CustomTitle(text: "Sign Up"),
                 ),
                 SizedBox(height: 40.h),
-
                 CustomTextFormField(
                   label: "Name",
                   prefixIcon: AppAssets.person,
@@ -62,7 +66,6 @@ class _SignupState extends State<Signup> {
                     return null;
                   },
                 ),
-
                 CustomTextFormField(
                   label: "Email",
                   prefixIcon: AppAssets.email,
@@ -81,7 +84,68 @@ class _SignupState extends State<Signup> {
                     return null;
                   },
                 ),
-
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          SvgPicture.asset(
+                            AppAssets.phone,
+                            width: 16.w,
+                            height: 16.h,
+                            colorFilter: ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            "Phone number",
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8.h),
+                      IntlPhoneField(
+                        controller: phoneController,
+                        initialCountryCode: 'EG',
+                        disableLengthCheck: false,
+                        dropdownIconPosition: IconPosition.trailing,
+                        flagsButtonPadding: EdgeInsets.only(left: 12.w, right: 8.w),
+                        dropdownIcon: Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
+                        style: TextStyle(fontSize: 14.sp),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: AppColors.primaryBackgrond,
+                          contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 12.w),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                            borderSide: BorderSide(color: AppColors.primary, width: 2),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                            borderSide: BorderSide(color: AppColors.primary, width: 2),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                            borderSide: BorderSide(color: AppColors.primary, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                        ),
+                        onChanged: (phone) {
+                          completePhoneNumber = phone.completeNumber;
+                        },
+                      ),
+                      SizedBox(height: 10.h),
+                    ],
+                  ),
+                ),
                 CustomTextFormField(
                   label: "Password",
                   prefixIcon: AppAssets.lock,
@@ -100,7 +164,6 @@ class _SignupState extends State<Signup> {
                     return null;
                   },
                 ),
-
                 CustomTextFormField(
                   label: "Verify Password",
                   prefixIcon: AppAssets.lock,
@@ -119,7 +182,6 @@ class _SignupState extends State<Signup> {
                     return null;
                   },
                 ),
-
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: CustomCheckbox(
@@ -131,75 +193,63 @@ class _SignupState extends State<Signup> {
                     },
                   ),
                 ),
-
                 SizedBox(height: 50.h),
                 Center(
                   child: Column(
                     children: [
-
-
                       CustomBtn(
                         text: _isLoading ? "Creating..." : "Signup",
-                        
                         btnWidth: 244.w,
                         btnHeight: 32.h,
                         weight: FontWeight.w600,
                         size: 16.sp,
                         eleveation: 8,
                         fontFamily: 'Kreon',
-                        
-                        onPressed: _isLoading ? () {} : () async {
-                          if (_formKey.currentState!.validate()) {
-                            
-                            setState(() {
-                              _isLoading = true;
-                            });
-
-                            try {
-                              await _authService.signup(
-                                userName: nameController.text.trim(), 
-                                email: emailController.text.trim(),   
-                                password: passwordController.text,    
-                              );
-
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Account created successfully! Please Login."),
-                                    backgroundColor: Colors.green,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                                
-                                Navigator.pushReplacementNamed(context, "login");
-                              }
-
-                            } catch (e) {
-                              String errorMsg = e.toString().replaceAll("Exception: ", "");
-                              
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(errorMsg),
-                                    backgroundColor: Colors.red,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            } finally {
-                              if (context.mounted) {
-                                setState(() {
-                                  _isLoading = false;
-                                });
-                              }
-                            }
-                          }
-                        },
+                        onPressed: _isLoading
+                            ? () {}
+                            : () async {
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() {
+                                    _isLoading = true;
+                                  });
+                                  try {
+                                    await _authService.signup(
+                                      userName: nameController.text.trim(),
+                                      email: emailController.text.trim(),
+                                      phoneNumber: completePhoneNumber,
+                                      password: passwordController.text,
+                                    );
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text("Account created successfully! Please Login."),
+                                          backgroundColor: Colors.green,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                      Navigator.pushReplacementNamed(context, "login");
+                                    }
+                                  } catch (e) {
+                                    String errorMsg = e.toString().replaceAll("Exception: ", "");
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(errorMsg),
+                                          backgroundColor: Colors.red,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    if (context.mounted) {
+                                      setState(() {
+                                        _isLoading = false;
+                                      });
+                                    }
+                                  }
+                                }
+                              },
                       ),
-
-
-
-
                       SizedBox(height: 8.h),
                       SizedBox(
                         width: 244.w,
@@ -211,6 +261,7 @@ class _SignupState extends State<Signup> {
                           },
                         ),
                       ),
+                      SizedBox(height: 40.h),
                     ],
                   ),
                 ),

@@ -90,7 +90,7 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
                       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
                       child: InkWell(
                         onTap: () => Navigator.pop(context),
-                        child: CustomSvgWrapper(path: AppAssets.arrowBack),
+                      child: CustomSvgWrapper(path: AppAssets.arrowBack),
                       ),
                     ),
                     Container(
