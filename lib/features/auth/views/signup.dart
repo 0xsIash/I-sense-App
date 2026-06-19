@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:dio/dio.dart';
 import 'package:wujidt/core/utils/app_assets.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
 import 'package:wujidt/core/utils/validators.dart';
@@ -32,6 +33,7 @@ class _SignupState extends State<Signup> {
   bool isRememberMe = false;
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+  bool _showPhoneError = false;
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +123,7 @@ class _SignupState extends State<Signup> {
                           filled: true,
                           fillColor: AppColors.primaryBackgrond,
                           contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 12.w),
+                          errorText: _showPhoneError ? "Phone number is required" : null,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.r),
                             borderSide: BorderSide(color: AppColors.primary, width: 2),
@@ -137,8 +140,17 @@ class _SignupState extends State<Signup> {
                             borderRadius: BorderRadius.circular(8.r),
                             borderSide: const BorderSide(color: Colors.red, width: 2),
                           ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
                         ),
                         onChanged: (phone) {
+                          if (phone.number.isNotEmpty && _showPhoneError) {
+                            setState(() {
+                              _showPhoneError = false;
+                            });
+                          }
                           completePhoneNumber = phone.completeNumber;
                         },
                       ),
@@ -208,44 +220,65 @@ class _SignupState extends State<Signup> {
                         onPressed: _isLoading
                             ? () {}
                             : () async {
-                                if (_formKey.currentState!.validate()) {
+                                if (phoneController.text.trim().isEmpty) {
                                   setState(() {
-                                    _isLoading = true;
+                                    _showPhoneError = true;
                                   });
-                                  try {
-                                    await _authService.signup(
-                                      userName: nameController.text.trim(),
-                                      email: emailController.text.trim(),
-                                      phoneNumber: completePhoneNumber,
-                                      password: passwordController.text,
+                                }
+
+                                bool isFormValid = _formKey.currentState!.validate();
+                                
+                                if (phoneController.text.trim().isEmpty || !isFormValid) {
+                                  return;
+                                }
+
+                                setState(() {
+                                  _isLoading = true;
+                                });
+                                try {
+                                  await _authService.signup(
+                                    userName: nameController.text.trim(),
+                                    email: emailController.text.trim(),
+                                    phoneNumber: completePhoneNumber,
+                                    password: passwordController.text,
+                                  );
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text("Account created successfully! Please Login."),
+                                        backgroundColor: Colors.green,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
                                     );
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text("Account created successfully! Please Login."),
-                                          backgroundColor: Colors.green,
-                                          behavior: SnackBarBehavior.floating,
-                                        ),
-                                      );
-                                      Navigator.pushReplacementNamed(context, "login");
+                                    Navigator.pushReplacementNamed(context, "login");
+                                  }
+                                } catch (e) {
+                                  String errorMsg = "Signup failed, please try again";
+                                  if (e is DioException) {
+                                    if (e.response?.statusCode == 400 || e.response?.statusCode == 409) {
+                                      errorMsg = "Email already exists!";
+                                    } else if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.connectionError) {
+                                      errorMsg = "No internet connection";
                                     }
-                                  } catch (e) {
-                                    String errorMsg = e.toString().replaceAll("Exception: ", "");
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(errorMsg),
-                                          backgroundColor: Colors.red,
-                                          behavior: SnackBarBehavior.floating,
-                                        ),
-                                      );
+                                  } else {
+                                    if (e.toString().contains("400") || e.toString().contains("409")) {
+                                      errorMsg = "Email already exists!";
                                     }
-                                  } finally {
-                                    if (context.mounted) {
-                                      setState(() {
-                                        _isLoading = false;
-                                      });
-                                    }
+                                  }
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(errorMsg),
+                                        backgroundColor: Colors.red,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                } finally {
+                                  if (context.mounted) {
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
                                   }
                                 }
                               },

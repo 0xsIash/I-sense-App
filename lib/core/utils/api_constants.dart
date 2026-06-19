@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = "https://either-home-according-cayman.trycloudflare.com"; 
+  static const String baseUrl = "https://strengthen-alberta-peripherals-onion.trycloudflare.com"; 
   
   static const String loginEndpoint = "/auth/login";
   static const String signupEndpoint = "/auth/signup";
@@ -13,8 +13,12 @@ class ApiConstants {
   static const String getPublishedImages = "/share/feed";
   static String publishImage(int imageId) => "/share/$imageId/publish";
   static String unpublishImage(int imageId) => "/share/$imageId/unpublish";
-  
-  static String getMySharedImagesEndpoint = "/share/my-shared";
+
+  static const String getMySharedImagesEndpoint = "/share/my-shared";
+
+  static const String profileEndpoint = "/auth/profile";
+  static const String updateProfileEndpoint = "/auth/profile/update";
+  static const String changePasswordEndpoint = "/auth/password";
 
   static String getSimilarProductsEndpoint(int imageId, int objId) => "/similar_products/$imageId/$objId/similar-products";
 }

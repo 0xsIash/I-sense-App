@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wujidt/core/utils/app_assets.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/features/auth/views/settings_screen.dart';
 import 'package:wujidt/features/home/models/scan_item_model.dart';
 import 'package:wujidt/features/home/services/job_service.dart';
 import 'package:wujidt/features/home/widgets/item_details_view.dart';
@@ -21,7 +22,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final JobService _jobService = JobService();
   
   int? userId;
-  String userName = "Loading...";
   String? profileImageUrl; 
   List<ScanItemModel> userImages = [];
   bool isLoading = true;
@@ -34,7 +34,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('userName') ?? "User";
     final savedId = prefs.getInt('userId');
     final savedProfilePic = prefs.getString('profilePicture'); 
 
@@ -43,7 +42,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       
       if (mounted) {
         setState(() {
-          userName = savedName;
           userId = savedId;
           profileImageUrl = savedProfilePic;
           userImages = images;
@@ -53,7 +51,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          userName = savedName;
           userId = savedId;
           profileImageUrl = savedProfilePic;
           isLoading = false;
@@ -95,7 +92,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.settings, color: AppColors.primary),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              ).then((_) => _loadUserData());
+            },
           ),
         ],
       ),
@@ -116,14 +118,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       : null,
                 ),
                 SizedBox(height: 12.h),
-                Text(
-                  userName,
-                  style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                    fontFamily: 'Kreon', 
-                  ),
+                ValueListenableBuilder<String>(
+                  valueListenable: MainLayout.userNameNotifier,
+                  builder: (context, currentUserName, child) {
+                    return Text(
+                      currentUserName,
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                        fontFamily: 'Kreon', 
+                      ),
+                    );
+                  },
                 ),
                 SizedBox(height: 30.h),
                 Padding(

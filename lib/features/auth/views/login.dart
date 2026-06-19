@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:dio/dio.dart';
 import 'package:wujidt/core/utils/app_assets.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
 import 'package:wujidt/core/utils/validators.dart';
@@ -115,10 +116,22 @@ class _LoginState extends State<Login> {
                                       );
                                     }
                                   } catch (e) {
+                                    String errorMessage = "Invalid email or password";
+                                    if (e is DioException) {
+                                      if (e.response?.statusCode == 401 || e.response?.statusCode == 400) {
+                                        errorMessage = "Invalid email or password";
+                                      } else if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.connectionError) {
+                                        errorMessage = "No internet connection";
+                                      }
+                                    } else {
+                                      if (e.toString().contains("401") || e.toString().contains("400")) {
+                                        errorMessage = "Invalid email or password";
+                                      }
+                                    }
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text(e.toString().replaceAll("Exception: ", "")),
+                                          content: Text(errorMessage),
                                           backgroundColor: Colors.red,
                                           behavior: SnackBarBehavior.floating,
                                         ),

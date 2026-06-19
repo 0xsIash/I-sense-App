@@ -9,6 +9,7 @@ import 'package:wujidt/features/home/widgets/browse_tab.dart';
 import 'package:wujidt/features/home/widgets/browse_toggle_bar.dart';
 import 'package:wujidt/features/home/widgets/custom_drawer.dart';
 import 'package:wujidt/features/home/widgets/browse_search_bar.dart';
+import 'package:wujidt/features/home/widgets/main_layout.dart';
 
 class BrowsePage extends StatefulWidget {
   final GlobalKey homeKey;
@@ -68,62 +69,66 @@ class _BrowsePageState extends State<BrowsePage> {
     final Map<String, dynamic> args = 
         (ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?) ?? {};
     
-    final String userName = args['userName'] ?? "User";
     final int currentUserId = args['userId'] ?? 0;
 
-    return Scaffold(
-      backgroundColor: AppColors.primaryBackgrond,
-      key: _scaffoldKey,
-      drawer: CustomDrawer(userName: userName),
-      body: SafeArea(
-        child: Column(
-          children: [
-            CustomHeader(
-              userName: userName,
-              scaffoldKey: _scaffoldKey,
-              processingCount: 0,
-              historyCount: 0,
-            ),
-            BrowseSearchBar(
-              controller: _searchController,
-              onSearch: (query) {
-                debugPrint("Searching for: $query");
-              },
-              onCameraTap: _handleCameraTap,
-            ),
-            BrowseToggleBar(
-              isBrowseMode: _isBrowseMode,
-              onBrowseTap: _switchToBrowse,
-              onMapTap: _switchToMap,
-            ),
-            Expanded(
-              child: Stack(
-                children: [
-                  Offstage(
-                    offstage: !_isBrowseMode,
-                    child: BrowseTab(
-                      key: _browseTabKey,
-                      currentUserId: currentUserId,
-                      onDataLoaded: (items) {
-                        _controller.browseItems = items;
-                        _controller.updateMarkers();
-                      },
-                    ),
+    return ValueListenableBuilder<String>(
+      valueListenable: MainLayout.userNameNotifier,
+      builder: (context, currentUserName, child) {
+        return Scaffold(
+          backgroundColor: AppColors.primaryBackgrond,
+          key: _scaffoldKey,
+          drawer: CustomDrawer(userName: currentUserName),
+          body: SafeArea(
+            child: Column(
+              children: [
+                CustomHeader(
+                  userName: currentUserName,
+                  scaffoldKey: _scaffoldKey,
+                  processingCount: 0,
+                  historyCount: 0,
+                ),
+                BrowseSearchBar(
+                  controller: _searchController,
+                  onSearch: (query) {
+                    debugPrint("Searching for: $query");
+                  },
+                  onCameraTap: _handleCameraTap,
+                ),
+                BrowseToggleBar(
+                  isBrowseMode: _isBrowseMode,
+                  onBrowseTap: _switchToBrowse,
+                  onMapTap: _switchToMap,
+                ),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Offstage(
+                        offstage: !_isBrowseMode,
+                        child: BrowseTab(
+                          key: _browseTabKey,
+                          currentUserId: currentUserId,
+                          onDataLoaded: (items) {
+                            _controller.browseItems = items;
+                            _controller.updateMarkers();
+                          },
+                        ),
+                      ),
+                      Offstage(
+                        offstage: _isBrowseMode,
+                        child: BrowseMapView(
+                          controller: _controller,
+                          currentUserId: currentUserId,
+                          onMapCreated: _controller.getCurrentLocation,
+                        ),
+                      ),
+                    ],
                   ),
-                  Offstage(
-                    offstage: _isBrowseMode,
-                    child: BrowseMapView(
-                      controller: _controller,
-                      currentUserId: currentUserId,
-                      onMapCreated: _controller.getCurrentLocation,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

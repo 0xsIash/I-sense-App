@@ -9,6 +9,7 @@ import 'package:wujidt/core/widgets/custom_header.dart';
 import 'package:wujidt/features/home/models/scan_item_model.dart';
 import 'package:wujidt/features/home/services/image_service.dart';
 import 'package:wujidt/features/home/services/job_service.dart';
+import 'package:wujidt/features/home/widgets/main_layout.dart';
 import 'package:wujidt/features/home/widgets/scan_item_card.dart';
 import 'package:wujidt/features/home/widgets/custom_drawer.dart';
 import 'package:wujidt/features/home/widgets/item_details_view.dart';
@@ -75,9 +76,7 @@ class HomePageState extends State<HomePage> {
       if (mounted && objects.isNotEmpty) {
         setState(() => item.extractedItems = objects);
       }
-    } catch (e) {
-      debugPrint("Error fetching objects: $e");
-    }
+    } catch (e) {}
   }
 
   Future<Position?> _getCurrentLocation() async {
@@ -105,13 +104,11 @@ class HomePageState extends State<HomePage> {
         );
         setState(() => processingList.insert(0, newItem));
         _uploadAndProcessImage(newItem, position);
-        
-        return true; 
+        return true;
       }
-      return false; 
+      return false;
     } catch (e) {
-      debugPrint("Picker Error: $e");
-      return false; 
+      return false;
     }
   }
 
@@ -260,88 +257,92 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> args = (ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?) ?? {};
-    final String userName = args['userName'] ?? "User";
     final int currentUserId = args['userId'] ?? 0;
     
     List<ScanItemModel> allItems = [...processingList, ...historyList];
 
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: Colors.white,
-      drawer: CustomDrawer(userName: userName),
-      body: SafeArea(
-        child: Column(
-          children: [
-            SizedBox(height: 15.h),
-            CustomHeader(
-              userName: userName,
-              scaffoldKey: _scaffoldKey,
-              processingCount: processingList.length,
-              historyCount: historyList.length,
-            ),
-            HomeSectionHeader(
-              isSelectionMode: isSelectionMode,
-              onToggleSelection: toggleSelectionMode,
-            ),
-            Expanded(
-              child: _isLoadingHistory && allItems.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : allItems.isEmpty
-                      ? const HomeEmptyState()
-                      : RefreshIndicator(
-                          onRefresh: _loadHistory,
-                          color: AppColors.primary,
-                          child: GridView.builder(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-                            itemCount: allItems.length,
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 15.w,
-                              mainAxisSpacing: 15.h,
-                              childAspectRatio: 0.85,
-                            ),
-                            itemBuilder: (context, index) {
-                              final item = allItems[index];
-                              return GestureDetector(
-                                onTap: () {
-                                  if (isSelectionMode) {
-                                    toggleItemSelection(item);
-                                  } else if (item.isCompleted) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => ItemDetailsView(
-                                          item: item,
-                                          currentUserId: currentUserId,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: ScanItemCard(
-                                  imageFile: item.imageFile,
-                                  imageUrl: item.imageUrl,
-                                  bottomContent: _buildBottomContent(item),
-                                  isSelectionMode: isSelectionMode,
-                                  isSelected: selectedItems.contains(item),
+    return ValueListenableBuilder<String>(
+      valueListenable: MainLayout.userNameNotifier,
+      builder: (context, currentUserName, child) {
+        return Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: Colors.white,
+          drawer: CustomDrawer(userName: currentUserName),
+          body: SafeArea(
+            child: Column(
+              children: [
+                SizedBox(height: 15.h),
+                CustomHeader(
+                  userName: currentUserName,
+                  scaffoldKey: _scaffoldKey,
+                  processingCount: processingList.length,
+                  historyCount: historyList.length,
+                ),
+                HomeSectionHeader(
+                  isSelectionMode: isSelectionMode,
+                  onToggleSelection: toggleSelectionMode,
+                ),
+                Expanded(
+                  child: _isLoadingHistory && allItems.isEmpty
+                      ? const Center(child: CircularProgressIndicator())
+                      : allItems.isEmpty
+                          ? const HomeEmptyState()
+                          : RefreshIndicator(
+                              onRefresh: _loadHistory,
+                              color: AppColors.primary,
+                              child: GridView.builder(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                                itemCount: allItems.length,
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 15.w,
+                                  mainAxisSpacing: 15.h,
+                                  childAspectRatio: 0.85,
                                 ),
-                              );
-                            },
-                          ),
-                        ),
+                                itemBuilder: (context, index) {
+                                  final item = allItems[index];
+                                  return GestureDetector(
+                                    onTap: () {
+                                      if (isSelectionMode) {
+                                            toggleItemSelection(item);
+                                      } else if (item.isCompleted) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => ItemDetailsView(
+                                              item: item,
+                                              currentUserId: currentUserId,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: ScanItemCard(
+                                      imageFile: item.imageFile,
+                                      imageUrl: item.imageUrl,
+                                      bottomContent: _buildBottomContent(item),
+                                      isSelectionMode: isSelectionMode,
+                                      isSelected: selectedItems.contains(item),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                ),
+                if (isSelectionMode)
+                  HomeSelectionBottomBar(
+                    selectedCount: selectedItems.length,
+                    isDeleting: _isDeleting,
+                    isSharing: _isSharing,
+                    onDelete: _confirmDelete,
+                    onShare: _confirmShare,
+                  ),
+              ],
             ),
-            if (isSelectionMode)
-              HomeSelectionBottomBar(
-                selectedCount: selectedItems.length,
-                isDeleting: _isDeleting,
-                isSharing: _isSharing,
-                onDelete: _confirmDelete,
-                onShare: _confirmShare,
-              ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -353,7 +354,7 @@ class HomePageState extends State<HomePage> {
           LinearProgressIndicator(
             value: item.progress,
             color: AppColors.primary,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+            backgroundColor: AppColors.primary.withOpacity(0.2),
           ),
           SizedBox(height: 5.h),
           Text("${(item.progress * 100).toInt()}%", style: TextStyle(fontSize: 10.sp, color: Colors.grey)),
