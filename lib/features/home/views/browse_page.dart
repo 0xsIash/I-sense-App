@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
 import 'package:wujidt/core/widgets/custom_header.dart';
 import 'package:wujidt/core/utils/image_picker_helper.dart';
-import 'package:wujidt/features/home/widgets/browse_controller.dart';
+import 'package:wujidt/features/home/controllers/browse_controller.dart';
 import 'package:wujidt/features/home/widgets/browse_map_view.dart';
 import 'package:wujidt/features/home/widgets/browse_tab.dart';
 import 'package:wujidt/features/home/widgets/browse_toggle_bar.dart';
@@ -33,10 +33,12 @@ class _BrowsePageState extends State<BrowsePage> {
     super.initState();
     _controller.addListener(_onControllerUpdate);
     _controller.getCurrentLocation();
+    MainLayout.targetMapLocation.addListener(_handleTargetLocationTrigger);
   }
 
   @override
   void dispose() {
+    MainLayout.targetMapLocation.removeListener(_handleTargetLocationTrigger);
     _controller.removeListener(_onControllerUpdate);
     _searchController.dispose();
     _controller.dispose();
@@ -44,6 +46,14 @@ class _BrowsePageState extends State<BrowsePage> {
   }
 
   void _onControllerUpdate() => setState(() {});
+
+  void _handleTargetLocationTrigger() {
+    if (MainLayout.targetMapLocation.value != null && mounted) {
+      setState(() {
+        _isBrowseMode = false;
+      });
+    }
+  }
 
   Future<void> _switchToMap() async {
     setState(() => _isBrowseMode = false);

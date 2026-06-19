@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/features/home/controllers/browse_controller.dart';
 import 'package:wujidt/features/home/widgets/map_item_card.dart';
-import 'browse_controller.dart';
+import 'package:wujidt/features/home/widgets/main_layout.dart';
+import 'package:wujidt/features/home/models/scan_item_model.dart';
 
 class BrowseMapView extends StatelessWidget {
   final BrowseController controller;
@@ -17,28 +19,67 @@ class BrowseMapView extends StatelessWidget {
     required this.currentUserId,
   });
 
+  void _checkExternalNavigation() {
+    final targetData = MainLayout.targetMapLocation.value;
+    if (targetData != null) {
+      final double lat = targetData['latitude'];
+      final double lng = targetData['longitude'];
+      final int? id = targetData['id'];
+
+      ScanItemModel? realItem;
+      try {
+        realItem = controller.browseItems.firstWhere(
+          (item) => item.id == id || (item.latitude == lat && item.longitude == lng),
+        );
+      } catch (_) {
+        realItem = ScanItemModel(
+          id: id ?? 9999,
+          status: 'completed',
+          isPublic: true,
+          latitude: lat,
+          longitude: lng,
+          locationName: targetData['title'],
+        );
+      }
+
+      controller.checkAndRouteToTargetImage(realItem);
+      MainLayout.targetMapLocation.value = null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: controller.currentLocation,
-            zoom: 15,
-          ),
-          myLocationEnabled: true,
-          myLocationButtonEnabled: true,
-          markers: controller.markers,
-          polylines: controller.polylines,
-          onMapCreated: (c) {
-            controller.mapController = c;
-            onMapCreated();
-          },
-          onTap: controller.handleMapTap,
-        ),
-        if (controller.travelInfo.isNotEmpty) _TravelInfoBanner(controller),
-        _SelectedItemCard(controller, currentUserId),
-      ],
+    return ValueListenableBuilder<Map<String, dynamic>?>(
+      valueListenable: MainLayout.targetMapLocation,
+      builder: (context, targetLocation, child) {
+        if (targetLocation != null && controller.mapController != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _checkExternalNavigation());
+        }
+        return Stack(
+          children: [
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: controller.currentLocation,
+                zoom: 15,
+              ),
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
+              markers: controller.markers,
+              polylines: controller.polylines,
+              onMapCreated: (c) {
+                controller.mapController = c;
+                onMapCreated();
+                if (MainLayout.targetMapLocation.value != null) {
+                  _checkExternalNavigation();
+                }
+              },
+              onTap: controller.handleMapTap,
+            ),
+            if (controller.travelInfo.isNotEmpty) _TravelInfoBanner(controller),
+            _SelectedItemCard(controller, currentUserId),
+          ],
+        );
+      },
     );
   }
 }

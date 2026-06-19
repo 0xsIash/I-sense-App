@@ -8,6 +8,8 @@ import 'package:wujidt/features/home/widgets/extracted_item_card.dart';
 import 'package:wujidt/features/home/widgets/similar_items_sheet.dart';
 import 'package:wujidt/features/home/widgets/interactive_canvas_page.dart';
 import 'package:wujidt/features/home/services/job_service.dart';
+import 'package:wujidt/features/home/widgets/contact_finder_sheet.dart';
+import 'package:wujidt/features/home/widgets/main_layout.dart';
 
 class ItemDetailsView extends StatefulWidget {
   final ScanItemModel item;
@@ -57,15 +59,51 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
     }
   }
 
+  void _openContactFinder(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) {
+        return ContactFinderSheet(
+          uploaderName: widget.item.userName ?? "Unknown User",
+          phoneNumber: widget.item.phoneNumber ?? "No Phone Provided",
+          locationName: widget.item.locationName ?? "Unknown Location",
+          onMapPressed: () {
+            Navigator.pop(context);
+            Navigator.pop(context);
+            if (widget.item.latitude != null && widget.item.longitude != null) {
+              MainLayout.targetMapLocation.value = {
+                'id': widget.item.id,
+                'latitude': widget.item.latitude,
+                'longitude': widget.item.longitude,
+                'title': widget.item.locationName ?? "Image Location",
+              };
+              MainLayout.navigationTrigger.value = 2;
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Location coordinates not available for this image")),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final extractedList = widget.item.extractedItems ?? [];
     final double totalPrice = extractedList.fold(0.0, (sum, e) => sum + e.price);
 
-    final bool isOwner = widget.item.userId == widget.currentUserId || 
-                         widget.item.userId.toString() == widget.currentUserId.toString() ||
-                         widget.item.userId == 0 || 
-                         widget.item.userId == null;
+    final bool isRealOwner = widget.item.userId != null && 
+                             widget.item.userId != 0 && 
+                             (widget.item.userId == widget.currentUserId || 
+                              widget.item.userId.toString() == widget.currentUserId.toString());
+
+    final bool showPublishControls = !widget.item.isPublic || isRealOwner;
 
     final List<String> tags = extractedList
         .map((e) => e.name.toString())
@@ -213,7 +251,24 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
                 ),
               ),
             ),
-            if (isOwner)
+            if (!showPublishControls)
+              Padding(
+                padding: EdgeInsets.all(20.w),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 45.h,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openContactFinder(context),
+                    icon: const Icon(Icons.person_search, color: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                    ),
+                    label: Text("Contact Finder", style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.bold, fontFamily: 'Kreon')),
+                  ),
+                ),
+              ),
+            if (showPublishControls)
               Padding(
                 padding: EdgeInsets.all(20.w),
                 child: SizedBox(

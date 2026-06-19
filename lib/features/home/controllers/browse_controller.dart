@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
@@ -29,7 +28,6 @@ class BrowseController extends ChangeNotifier {
     _polylinePoints = PolylinePoints(apiKey: _apiKey);
   }
 
-
   Future<void> getCurrentLocation() async {
     final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return;
@@ -52,7 +50,6 @@ class BrowseController extends ChangeNotifier {
       CameraUpdate.newLatLngZoom(currentLocation, 15),
     );
   }
-
 
   Future<void> onDestinationSelected(LatLng dest) async {
     final int myToken = ++_routeRequestToken;
@@ -146,26 +143,23 @@ class BrowseController extends ChangeNotifier {
     notifyListeners();
   }
 
-
   void handleMapTap(LatLng latLng) {
-    selectedItem = null;
-
     final bool hasRedMarker =
         markers.any((m) => m.markerId.value == "tapped_location");
 
-    if (hasRedMarker) {
-      markers =
-          markers.where((m) => m.markerId.value != "tapped_location").toSet();
+    if (selectedItem != null || hasRedMarker || polylines.isNotEmpty) {
+      selectedItem = null;
+      markers = markers.where((m) => m.markerId.value != "tapped_location").toSet();
       polylines = {};
       travelInfo = "";
       ++_routeRequestToken;
+      updateMarkers();
       notifyListeners();
     } else {
       updateMarkers(tappedPoint: latLng);
       onDestinationSelected(latLng);
     }
   }
-
 
   Future<void> updateMarkers({LatLng? tappedPoint}) async {
     if (tappedPoint != null) {
@@ -247,6 +241,33 @@ class BrowseController extends ChangeNotifier {
     updateMarkers();
   }
 
+  Future<void> checkAndRouteToTargetImage(ScanItemModel targetItem) async {
+    if (targetItem.latitude == null || targetItem.longitude == null) return;
+
+    final LatLng targetLatLng = LatLng(targetItem.latitude!, targetItem.longitude!);
+    selectedItem = targetItem;
+
+    final icon = await MapMarker.buildCustomMarker(
+      item: targetItem,
+      isSelected: true,
+    );
+
+    markers.add(
+      Marker(
+        markerId: MarkerId(targetItem.id.toString()),
+        position: targetLatLng,
+        icon: icon,
+        onTap: () => _onMarkerTap(targetItem),
+      ),
+    );
+
+    notifyListeners();
+    onDestinationSelected(targetLatLng);
+
+    mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(targetLatLng, 14),
+    );
+  }
 
   void resetMapState() {
     selectedItem = null;

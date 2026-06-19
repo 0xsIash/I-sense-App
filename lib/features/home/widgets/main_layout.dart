@@ -10,6 +10,7 @@ class MainLayout extends StatefulWidget {
 
   static final ValueNotifier<int?> navigationTrigger = ValueNotifier<int?>(null);
   static final ValueNotifier<String> userNameNotifier = ValueNotifier<String>("User");
+  static final ValueNotifier<Map<String, dynamic>?> targetMapLocation = ValueNotifier<Map<String, dynamic>?>(null);
 
   @override
   State<MainLayout> createState() => _MainLayoutState();
@@ -24,7 +25,6 @@ class _MainLayoutState extends State<MainLayout> {
   void initState() {
     super.initState();
     MainLayout.navigationTrigger.addListener(_handleExternalNavigation);
-    
     _authService.fetchAndCacheProfile();
   }
 

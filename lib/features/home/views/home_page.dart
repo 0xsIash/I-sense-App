@@ -86,7 +86,9 @@ class HomePageState extends State<HomePage> {
       if (mounted && objects.isNotEmpty) {
         setState(() => item.extractedItems = objects);
       }
-    } catch (e) {}
+    } catch (e) {
+      //
+    }
   }
 
   Future<Position?> _getCurrentLocation() async {
@@ -364,7 +366,7 @@ class HomePageState extends State<HomePage> {
           LinearProgressIndicator(
             value: item.progress,
             color: AppColors.primary,
-            backgroundColor: AppColors.primary.withOpacity(0.2),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
           ),
           SizedBox(height: 5.h),
           Text("${(item.progress * 100).toInt()}%", style: TextStyle(fontSize: 10.sp, color: Colors.grey)),
