@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wujidt/core/utils/api_constants.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
 import 'package:wujidt/features/home/models/scan_item_model.dart';
@@ -24,6 +25,7 @@ class BrowseTab extends StatefulWidget {
 class BrowseTabState extends State<BrowseTab> {
   List<ScanItemModel> items = [];
   bool isLoading = true;
+  int? localUserId;
 
   final Dio _dio = Dio(
     BaseOptions(
@@ -44,9 +46,14 @@ class BrowseTabState extends State<BrowseTab> {
   }
 
   Future<void> _loadImages() async {
-    setState(() {
-      isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        isLoading = true;
+      });
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final savedId = prefs.getInt('userId');
 
     try {
       final response = await _dio.get(
@@ -65,6 +72,7 @@ class BrowseTabState extends State<BrowseTab> {
 
         if (mounted) {
           setState(() {
+            localUserId = savedId;
             items = loadedItems;
             isLoading = false;
           });
@@ -76,6 +84,7 @@ class BrowseTabState extends State<BrowseTab> {
       debugPrint("Error loading public images: $e");
       if (mounted) {
         setState(() {
+          localUserId = savedId;
           isLoading = false;
         });
       }
@@ -209,7 +218,7 @@ class BrowseTabState extends State<BrowseTab> {
           MaterialPageRoute(
             builder: (_) => ItemDetailsView(
               item: item,
-              currentUserId: widget.currentUserId,
+              currentUserId: localUserId ?? widget.currentUserId,
             ),
           ),
         );

@@ -75,7 +75,7 @@ class JobService {
       final response = await _dio.get(ApiConstants.getAllImagesEndpoint);
       if (response.data['images'] != null) {
         return (response.data['images'] as List)
-            .map((json) => ScanItemModel.fromHistoryJson(json))
+            .map((json) => ScanItemModel.fromJson(json))
             .toList();
       }
       return [];

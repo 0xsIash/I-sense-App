@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
 import 'package:wujidt/core/utils/image_picker_helper.dart';
 import 'package:wujidt/core/widgets/custom_header.dart';
@@ -33,6 +34,7 @@ class HomePageState extends State<HomePage> {
   bool isSelectionMode = false;
   bool _isDeleting = false;
   bool _isSharing = false;
+  int? localUserId;
 
   List<ScanItemModel> processingList = [];
   List<ScanItemModel> historyList = [];
@@ -46,17 +48,25 @@ class HomePageState extends State<HomePage> {
 
   Future<void> _loadHistory() async {
     setState(() => _isLoadingHistory = true);
+    final prefs = await SharedPreferences.getInstance();
+    final savedId = prefs.getInt('userId');
     try {
       final history = await _jobService.getUserHistory();
       if (mounted) {
         setState(() {
+          localUserId = savedId;
           historyList = history;
           _isLoadingHistory = false;
         });
         _fetchDetailsSequentially(historyList);
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoadingHistory = false);
+      if (mounted) {
+        setState(() {
+          localUserId = savedId;
+          _isLoadingHistory = false;
+        });
+      }
     }
   }
 
@@ -257,7 +267,7 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> args = (ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?) ?? {};
-    final int currentUserId = args['userId'] ?? 0;
+    final int currentUserId = args['userId'] ?? localUserId ?? 0;
     
     List<ScanItemModel> allItems = [...processingList, ...historyList];
 

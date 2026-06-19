@@ -7,10 +7,13 @@ class ScanItemModel {
   int? imageId;
   int? jobId;
   final int? userId; 
+  final String? userName;
+  final String? phoneNumber;
   
   final String? imageUrl; 
   final File? imageFile;   
   final String? locationName; 
+  final String? location;
   
   String status;
   double progress;   
@@ -25,12 +28,15 @@ class ScanItemModel {
   
   ScanItemModel({
     this.userId,
+    this.userName,
+    this.phoneNumber,
     this.id,
     this.imageId,
     this.jobId,
     this.imageUrl,
     this.imageFile,
     this.locationName,
+    this.location,
     required this.status,
     this.extractedItems,
     this.progress = 0.0,    
@@ -49,7 +55,7 @@ class ScanItemModel {
 
   factory ScanItemModel.fromJson(Map<String, dynamic> json) {
     String? fullImageUrl;
-    String? rawPath = json['original_url'] ?? json['file_name'] ?? json['url'];
+    String? rawPath = json['original_url'] ?? json['file_name'] ?? json['url'] ?? json['annotated_url'];
 
     if (rawPath != null) {
       if (rawPath.startsWith('http')) {
@@ -66,75 +72,6 @@ class ScanItemModel {
       items = (objectsData as List)
           .map((e) => ExtractedItemModel.fromJson(e))
           .toList();
-    }
-
-    String serverStatus = json['status'] ?? 'pending';
-
-    return ScanItemModel(
-      id: json['id'],
-      userId: json['user_id'], 
-      imageId: json['image_id'] ?? json['id'],
-      jobId: json['job_id'],
-      imageUrl: fullImageUrl,
-      locationName: json['location_name'] ?? "Unknown Location",
-      status: serverStatus,
-      progress: serverStatus == 'completed' ? 1.0 : 0.0,
-      isDeleted: false,
-      isPublic: json['is_public'] ?? false,
-      extractedItems: items,
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
-    );
-  }
-
-  factory ScanItemModel.fromFeedJson(Map<String, dynamic> json, String baseUrl) {
-    String? fullImageUrl;
-    String? rawPath = json['original_url'] ?? json['image_url'];
-
-    if (rawPath != null) {
-      if (rawPath.startsWith('http')) {
-        fullImageUrl = rawPath;
-      } else {
-        String cleanBase = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
-        String cleanPath = rawPath.startsWith('/') ? rawPath : '/$rawPath';
-        fullImageUrl = "$cleanBase$cleanPath";
-      }
-    }
-
-    List<ExtractedItemModel> items = [];
-    var objectsData = json['objects'] ?? json['extracted_items'];
-    if (objectsData != null) {
-      items = (objectsData as List)
-          .map((e) => ExtractedItemModel.fromJson(e))
-          .toList();
-    }
-
-    return ScanItemModel(
-      id: json['image_id'] ?? json['id'],
-      userId: json['user_id'], 
-      imageId: json['image_id'] ?? json['id'],
-      imageUrl: fullImageUrl,
-      locationName: json['location_name'] ?? "Unknown Location",
-      status: 'completed',
-      isPublic: true,
-      progress: 1.0,
-      extractedItems: items,
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
-    );
-  }
-
-  factory ScanItemModel.fromHistoryJson(Map<String, dynamic> json) {
-    String? fullImageUrl;
-    String? rawPath = json['original_url'] ?? json['annotated_url'];
-
-    if (rawPath != null) {
-      if (rawPath.startsWith('http')) {
-        fullImageUrl = rawPath;
-      } else {
-        String cleanPath = rawPath.startsWith('/') ? rawPath.substring(1) : rawPath;
-        fullImageUrl = "${ApiConstants.baseUrl}/$cleanPath";
-      }
     }
 
     double? cost;
@@ -144,20 +81,25 @@ class ScanItemModel {
           : double.tryParse(json['total_cost'].toString());
     }
 
+    final int dynamicId = json['id'] ?? json['image_id'] ?? json['job_id'] ?? 0;
+    final String serverStatus = json['status'] ?? 'completed';
+
     return ScanItemModel(
-      id: json['id'],
+      id: dynamicId,
       userId: json['user_id'], 
-      imageId: json['id'], 
-      jobId: json['id'],
-      imageUrl: fullImageUrl, 
+      userName: json['publisher_username'] ?? json['user_name'],
+      phoneNumber: json['publisher_phone'] ?? json['phone_number'],
+      imageId: dynamicId,
+      jobId: dynamicId,
+      imageUrl: fullImageUrl,
       locationName: json['location_name'] ?? "Unknown Location",
-      imageFile: null,
-      status: 'completed', 
-      progress: 1.0,       
+      location: json['location_name'] ?? "Unknown Location",
+      status: serverStatus,
+      progress: serverStatus == 'completed' ? 1.0 : 0.0,
       isDeleted: false,
-      totalCost: cost,
       isPublic: json['is_public'] ?? false,
-      extractedItems: [], 
+      extractedItems: items,
+      totalCost: cost,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
     );

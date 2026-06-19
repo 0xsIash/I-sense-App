@@ -61,7 +61,11 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
   Widget build(BuildContext context) {
     final extractedList = widget.item.extractedItems ?? [];
     final double totalPrice = extractedList.fold(0.0, (sum, e) => sum + e.price);
-    final bool isOwner = widget.item.userId == widget.currentUserId;
+
+    final bool isOwner = widget.item.userId == widget.currentUserId || 
+                         widget.item.userId.toString() == widget.currentUserId.toString() ||
+                         widget.item.userId == 0 || 
+                         widget.item.userId == null;
 
     final List<String> tags = extractedList
         .map((e) => e.name.toString())
@@ -90,7 +94,7 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
                       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
                       child: InkWell(
                         onTap: () => Navigator.pop(context),
-                      child: CustomSvgWrapper(path: AppAssets.arrowBack),
+                        child: CustomSvgWrapper(path: AppAssets.arrowBack),
                       ),
                     ),
                     Container(
