@@ -51,13 +51,13 @@ class ScanItemCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                flex: 3,
+                flex: 4,
                 child: Padding(
-                  padding: EdgeInsets.all(12.w), 
+                  padding: EdgeInsets.all(8.w), 
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.r),
+                    borderRadius: BorderRadius.circular(12.r),
                     child: imageProvider != null
-                        ? Image(image: imageProvider, fit: BoxFit.contain) 
+                        ? Image(image: imageProvider, fit: BoxFit.cover) 
                         : Icon(Icons.image_not_supported, color: Colors.grey[300], size: 40),
                   ),
                 ),
@@ -65,7 +65,7 @@ class ScanItemCard extends StatelessWidget {
               Expanded(
                 flex: 1,
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   child: bottomContent,
                 ),
               ),
