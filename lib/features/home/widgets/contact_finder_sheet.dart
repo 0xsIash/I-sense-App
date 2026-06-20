@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
 
 class ContactFinderSheet extends StatelessWidget {
@@ -15,6 +16,17 @@ class ContactFinderSheet extends StatelessWidget {
     required this.locationName,
     required this.onMapPressed,
   });
+
+  Future<void> _makePhoneCall(String number) async {
+    if (number.isEmpty || number == "No Phone Provided") return;
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: number,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +86,7 @@ class ContactFinderSheet extends StatelessWidget {
                 phoneNumber.isNotEmpty ? phoneNumber : "No Phone Provided",
                 style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: Colors.black, fontFamily: 'Kreon'),
               ),
+              onTap: () => _makePhoneCall(phoneNumber),
             ),
             Divider(height: 1.h, color: Colors.grey[200]),
             ListTile(
@@ -89,10 +102,7 @@ class ContactFinderSheet extends StatelessWidget {
                 locationName.isNotEmpty ? locationName : "Unknown Location",
                 style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: Colors.black, fontFamily: 'Kreon'),
               ),
-              trailing: IconButton(
-                icon: Icon(Icons.navigation_outlined, color: AppColors.primary, size: 28.sp),
-                onPressed: onMapPressed,
-              ),
+              onTap: onMapPressed,
             ),
             SizedBox(height: 10.h),
           ],
