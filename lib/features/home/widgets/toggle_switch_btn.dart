@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_colors.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
 
 class ToggleSwitchBtn extends StatelessWidget {
   const ToggleSwitchBtn({super.key, required this.isProcessing, required this.onChanged});

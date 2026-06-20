@@ -3,8 +3,9 @@ abstract class AppAssets {
     static const _imgBasePath = 'assets/imgs/';
 
     //imgs
-    static const String splash_1 = "${_imgBasePath}splash_1.svg";
-    static const String splash_2 = "${_imgBasePath}splash_2.svg";
+    static const String splash_1 = "${_imgBasePath}wujidt_splash_1.svg";
+    static const String splash_2 = "${_imgBasePath}wujidt_splash_2.png";
+    static const String onboarding1 = "${_imgBasePath}star_onboarding1.svg";
 
     // icons
     static const String arrowBack = '${_iconBasePath}arrow back.svg';
@@ -19,5 +20,7 @@ abstract class AppAssets {
     static const String person = '${_iconBasePath}person.svg';
     static const String search = '${_iconBasePath}search.svg';
     static const String shop = '${_iconBasePath}shop.svg';
+    static const String searchCamera = '${_iconBasePath}search_camera.svg';
+    static const String phone = '${_iconBasePath}phone.svg';
 }
 

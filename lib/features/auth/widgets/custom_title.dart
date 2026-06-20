@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_colors.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
 
 class CustomTitle extends StatelessWidget {
   const CustomTitle({super.key, required this.text});
@@ -14,7 +14,7 @@ class CustomTitle extends StatelessWidget {
         color: AppColors.primary,
         fontWeight: FontWeight.w600,
         fontSize: 56.sp,
-        fontFamily: "Nunito Sans",
+        fontFamily: "Kreon",
       ),
     );
   }

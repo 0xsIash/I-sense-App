@@ -1,14 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/features/auth/views/settings_screen.dart';
+import 'package:wujidt/features/home/widgets/main_layout.dart'; 
 
-class CustomDrawer extends StatelessWidget {
+class CustomDrawer extends StatefulWidget {
   const CustomDrawer({
     super.key,
     required this.userName,
   });
 
   final String userName;
+
+  @override
+  State<CustomDrawer> createState() => _CustomDrawerState();
+}
+
+class _CustomDrawerState extends State<CustomDrawer> {
+  String? profileImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileImage();
+  }
+
+  Future<void> _loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        profileImageUrl = prefs.getString('profilePicture');
+      });
+    }
+  }
 
   Future<void> _confirmLogout(BuildContext context) async {
     return showDialog<void>(
@@ -52,47 +77,84 @@ class CustomDrawer extends StatelessWidget {
     return Drawer(
       backgroundColor: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 60),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 60.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 22.r,
-                  backgroundColor: AppColors.secondaryBackgorud,
-                  child: Icon(Icons.person, color: AppColors.primary),
-                ),
-                const SizedBox(width: 15),
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF5A5A89),
+            InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                MainLayout.navigationTrigger.value = 3; 
+              },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 22.r,
+                    backgroundColor: AppColors.secondaryBackgorud,
+                    backgroundImage: (profileImageUrl != null && profileImageUrl!.isNotEmpty)
+                        ? NetworkImage(profileImageUrl!) as ImageProvider
+                        : null,
+                    child: (profileImageUrl == null || profileImageUrl!.isEmpty)
+                        ? Icon(Icons.person, color: AppColors.primary, size: 22.r)
+                        : null,
                   ),
-                ),
-              ],
+                  SizedBox(width: 15.w),
+                  Text(
+                    widget.userName,
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
             ),
             
-            const SizedBox(height: 30),
+            SizedBox(height: 40.h),
+            
+            InkWell(
+              onTap: () {
+                Navigator.pop(context); 
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                ).then((_) => _loadProfileImage());
+              },
+              child: Row(
+                children: [
+                  Text(
+                    "Settings",
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(Icons.settings_outlined, color: AppColors.primary),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 30.h),
             
             InkWell(
               onTap: () {
                 _confirmLogout(context);
               },
-              child: const Row(
+              child: Row(
                 children: [
                   Text(
                     "Log out",
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
                       color: Colors.red,
                     ),
                   ),
-                  Spacer(),
-                  Icon(Icons.logout, color: Colors.red),
+                  const Spacer(),
+                  const Icon(Icons.logout, color: Colors.red),
                 ],
               ),
             ),

@@ -1,16 +1,22 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/core/utils/api_constants.dart';
-import 'package:isense/features/home/models/scan_item_model.dart';
-import 'package:isense/features/home/widgets/item_details_view.dart';
-import 'package:isense/features/home/widgets/scan_item_card.dart';
-import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wujidt/core/utils/api_constants.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/features/home/models/scan_item_model.dart';
+import 'package:wujidt/features/home/widgets/item_details_view.dart';
+import 'package:wujidt/features/home/widgets/scan_item_card.dart';
 
 class BrowseTab extends StatefulWidget {
+  final int currentUserId;
   final Function(List<ScanItemModel>)? onDataLoaded;
 
-  const BrowseTab({super.key, this.onDataLoaded});
+  const BrowseTab({
+    super.key,
+    required this.currentUserId,
+    this.onDataLoaded,
+  });
 
   @override
   State<BrowseTab> createState() => BrowseTabState();
@@ -19,6 +25,7 @@ class BrowseTab extends StatefulWidget {
 class BrowseTabState extends State<BrowseTab> {
   List<ScanItemModel> items = [];
   bool isLoading = true;
+  int? localUserId;
 
   final Dio _dio = Dio(
     BaseOptions(
@@ -34,19 +41,38 @@ class BrowseTabState extends State<BrowseTab> {
     _loadImages();
   }
 
+  Future<void> reloadImages() async {
+    await _loadImages();
+  }
+
   Future<void> _loadImages() async {
+    if (mounted) {
+      setState(() {
+        isLoading = true;
+      });
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final savedId = prefs.getInt('userId');
+
     try {
-      final response = await _dio.get(ApiConstants.getPublishedImages);
+      final response = await _dio.get(
+        ApiConstants.getPublishedImages,
+      );
 
       if (response.statusCode == 200) {
         final data = response.data;
         List imagesList = data['images'] ?? [];
 
-        final loadedItems =
-            imagesList.map((e) => ScanItemModel.fromJson(e)).toList();
+        final loadedItems = imagesList
+            .map(
+              (e) => ScanItemModel.fromJson(e),
+            )
+            .toList();
 
         if (mounted) {
           setState(() {
+            localUserId = savedId;
             items = loadedItems;
             isLoading = false;
           });
@@ -57,7 +83,10 @@ class BrowseTabState extends State<BrowseTab> {
     } catch (e) {
       debugPrint("Error loading public images: $e");
       if (mounted) {
-        setState(() => isLoading = false);
+        setState(() {
+          localUserId = savedId;
+          isLoading = false;
+        });
       }
     }
   }
@@ -65,7 +94,9 @@ class BrowseTabState extends State<BrowseTab> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
     return RefreshIndicator(
@@ -80,20 +111,31 @@ class BrowseTabState extends State<BrowseTab> {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.3,
+          ),
           Center(
             child: Column(
               children: [
-                Icon(Icons.image_not_supported_outlined,
-                    size: 50.sp, color: Colors.grey),
+                Icon(
+                  Icons.image_not_supported_outlined,
+                  size: 50.sp,
+                  color: Colors.grey,
+                ),
                 SizedBox(height: 10.h),
                 Text(
                   "No public items found",
-                  style: TextStyle(color: Colors.grey, fontSize: 16.sp),
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16.sp,
+                  ),
                 ),
                 Text(
                   "Pull down to refresh",
-                  style: TextStyle(color: Colors.grey[400], fontSize: 12.sp),
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 12.sp,
+                  ),
                 ),
               ],
             ),
@@ -104,7 +146,10 @@ class BrowseTabState extends State<BrowseTab> {
 
     return GridView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+      padding: EdgeInsets.symmetric(
+        horizontal: 20.w,
+        vertical: 10.h,
+      ),
       itemCount: items.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -129,22 +174,28 @@ class BrowseTabState extends State<BrowseTab> {
             .map((e) => e.category)
             .toSet()
             .take(2)
-            .map((tag) => Container(
-                  margin: EdgeInsets.only(right: 5.w),
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                  child: Center(
-                    child: Text(
-                      tag,
-                      style:
-                          TextStyle(color: Colors.white, fontSize: 10.sp),
+            .map(
+              (tag) => Container(
+                margin: EdgeInsets.only(right: 5.w),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 8.w,
+                  vertical: 2.h,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                child: Center(
+                  child: Text(
+                    tag,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10.sp,
                     ),
                   ),
-                ))
+                ),
+              ),
+            )
             .toList(),
       );
     } else {
@@ -165,7 +216,10 @@ class BrowseTabState extends State<BrowseTab> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ItemDetailsView(item: item),
+            builder: (_) => ItemDetailsView(
+              item: item,
+              currentUserId: localUserId ?? widget.currentUserId,
+            ),
           ),
         );
       },

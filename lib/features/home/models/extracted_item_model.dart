@@ -1,4 +1,4 @@
-import 'package:isense/core/utils/api_constants.dart';
+import 'package:wujidt/core/utils/api_constants.dart';
 
 class ExtractedItemModel {
   final int? id;

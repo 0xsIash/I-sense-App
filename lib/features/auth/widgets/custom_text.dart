@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:isense/core/utils/app_colors.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
 
 class CustomText extends StatelessWidget {
   const CustomText({super.key, required this.question, required this.text, required this.onTap});
@@ -18,6 +18,7 @@ class CustomText extends StatelessWidget {
             color: AppColors.primary,
             fontSize: 14,
               fontWeight: FontWeight.w600,
+              fontFamily: 'Kreon'
           ),
         ),
 

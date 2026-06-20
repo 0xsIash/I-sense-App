@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_assets.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/core/widgets/custom_btn.dart';
-import 'package:isense/core/widgets/custom_svg_wrapper.dart';
-import 'package:isense/features/auth/widgets/custom_text.dart';
+import 'package:wujidt/core/utils/app_assets.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/core/widgets/custom_btn.dart';
+import 'package:wujidt/core/widgets/custom_svg_wrapper.dart';
+import 'package:wujidt/features/auth/widgets/custom_text.dart';
 
 class Splash extends StatelessWidget {
   const Splash({super.key});
@@ -32,22 +32,22 @@ class Splash extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Spacer(flex: 2),
+                  SizedBox(height: 80.h),
                   Text(
-                    "I Sense",
+                    "Wujidt",
                     style: TextStyle(
                       fontSize: 80.sp,
                       fontWeight: FontWeight.w400,
                       color: AppColors.primary,
-                      fontFamily: "MervaleScript",
+                      fontFamily: "combo",
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const Spacer(flex: 1),
-                  CustomSvgWrapper(
-                    path: AppAssets.splash_2,
-                    iconWidth: 0.7.sw,
+                  Image.asset(
+                    AppAssets.splash_2,
+                    width: 0.99.sw,
                   ),
-                  const Spacer(flex: 1),
                   CustomBtn(
                     text: "Login",
                     onPressed: () {
@@ -64,7 +64,7 @@ class Splash extends StatelessWidget {
                   SizedBox(
                     width: 244.w,
                     child: CustomText(
-                      question: "Don’t have an account ? ",
+                      question: "Don't have an account ? ",
                       text: "create one!",
                       onTap: () {
                         Navigator.pushNamed(context, "signup");

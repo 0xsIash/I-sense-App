@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:isense/features/home/models/scan_item_model.dart';
-import 'package:isense/features/home/models/draggable_object_model.dart';
+import 'package:wujidt/features/home/models/scan_item_model.dart';
+import 'package:wujidt/features/home/models/draggable_object_model.dart';
 
 class InteractiveCanvasPage extends StatefulWidget {
   final ScanItemModel item;

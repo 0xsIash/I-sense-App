@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/features/home/services/job_service.dart';
-import 'package:isense/features/home/models/similar_product_model.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/features/home/services/job_service.dart';
+import 'package:wujidt/features/home/models/similar_product_model.dart';
 
 class SimilarItemsSheet extends StatefulWidget {
   final int imageId;

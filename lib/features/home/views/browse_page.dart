@@ -1,17 +1,18 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:isense/features/home/widgets/browse_tab.dart';
-import 'package:isense/features/home/widgets/item_details_view.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/features/home/widgets/custom_drawer.dart';
-import 'package:isense/features/home/views/home_page.dart';
-import 'package:isense/core/widgets/custom_header.dart';
-import 'package:isense/features/home/models/scan_item_model.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/core/widgets/custom_header.dart';
+import 'package:wujidt/core/utils/image_picker_helper.dart';
+import 'package:wujidt/features/home/controllers/browse_controller.dart';
+import 'package:wujidt/features/home/widgets/browse_map_view.dart';
+import 'package:wujidt/features/home/widgets/browse_tab.dart';
+import 'package:wujidt/features/home/widgets/browse_toggle_bar.dart';
+import 'package:wujidt/features/home/widgets/custom_drawer.dart';
+import 'package:wujidt/features/home/widgets/browse_search_bar.dart';
+import 'package:wujidt/features/home/widgets/main_layout.dart';
 
 class BrowsePage extends StatefulWidget {
-  final GlobalKey<HomePageState> homeKey;
+  final GlobalKey homeKey;
 
   const BrowsePage({super.key, required this.homeKey});
 
@@ -20,200 +21,124 @@ class BrowsePage extends StatefulWidget {
 }
 
 class _BrowsePageState extends State<BrowsePage> {
-  bool isBrowseMode = true;
+  final BrowseController _controller = BrowseController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<BrowseTabState> _browseTabKey = GlobalKey<BrowseTabState>();
+  final TextEditingController _searchController = TextEditingController();
 
-  List<ScanItemModel> browseItems = [];
+  bool _isBrowseMode = true;
 
-  List<Marker> _buildMarkers() {
-  return browseItems
-      .where((item) => item.latitude != null && item.longitude != null)
-      .map((item) {
-        debugPrint("LAT: ${item.latitude}, LNG: ${item.longitude}");
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onControllerUpdate);
+    _controller.getCurrentLocation();
+    MainLayout.targetMapLocation.addListener(_handleTargetLocationTrigger);
+  }
 
+  @override
+  void dispose() {
+    MainLayout.targetMapLocation.removeListener(_handleTargetLocationTrigger);
+    _controller.removeListener(_onControllerUpdate);
+    _searchController.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
 
-    return Marker(
-      point: LatLng(item.latitude!, item.longitude!),
-      width: 55.w,
-      height: 60.h,
-      child: GestureDetector(
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ItemDetailsView(item: item),
-            ),
-          );
-          setState(() {});
-        },
-        child: Column(
-          children: [
-            Container(
-              width: 42.w,
-              height: 42.w,
-              padding: EdgeInsets.all(2.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(color: AppColors.primary, width: 2),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 6,
-                    offset: Offset(0, 3),
-                  )
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.r),
-                child: item.imageFile != null
-                    ? Image.file(item.imageFile!, fit: BoxFit.cover)
-                    : (item.imageUrl != null
-                        ? Image.network(item.imageUrl!, fit: BoxFit.cover)
-                        : const Icon(Icons.image)),
-              ),
-            ),
-            Icon(Icons.location_pin,
-                color: AppColors.primary, size: 18.sp),
-          ],
-        ),
-      ),
-    );
-  }).toList();
-}
+  void _onControllerUpdate() => setState(() {});
+
+  void _handleTargetLocationTrigger() {
+    if (MainLayout.targetMapLocation.value != null && mounted) {
+      setState(() {
+        _isBrowseMode = false;
+      });
+    }
+  }
+
+  Future<void> _switchToMap() async {
+    setState(() => _isBrowseMode = false);
+    _controller.resetMapState();
+    await _browseTabKey.currentState?.reloadImages();
+    await _controller.getCurrentLocation();
+  }
+
+  void _switchToBrowse() {
+    setState(() => _isBrowseMode = true);
+    _controller.resetBrowseMode();
+  }
+
+  Future<void> _handleCameraTap() async {
+    File? imageFile = await ImagePickerHelper.showImageSourceOptions(context);
+    if (imageFile != null) {
+      debugPrint("Selected image for search: ${imageFile.path}");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    String userName =
-        (ModalRoute.of(context)!.settings.arguments as String?) ?? "User";
+    final Map<String, dynamic> args = 
+        (ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?) ?? {};
+    
+    final int currentUserId = args['userId'] ?? 0;
 
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: Colors.white,
-      drawer: CustomDrawer(userName: userName),
-      body: SafeArea(
-        child: Column(
-          children: [
-            SizedBox(height: 15.h),
-
-            CustomHeader(
-              userName: userName,
-              scaffoldKey: _scaffoldKey,
-              processingCount:
-                  widget.homeKey.currentState?.processingList.length ?? 0,
-              historyCount:
-                  widget.homeKey.currentState?.historyList.length ?? 0,
-            ),
-
-            SizedBox(height: 25.h),
-
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Container(
-                height: 45.h,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25.r),
-                  border: Border.all(color: AppColors.primary),
+    return ValueListenableBuilder<String>(
+      valueListenable: MainLayout.userNameNotifier,
+      builder: (context, currentUserName, child) {
+        return Scaffold(
+          backgroundColor: AppColors.primaryBackgrond,
+          key: _scaffoldKey,
+          drawer: CustomDrawer(userName: currentUserName),
+          body: SafeArea(
+            child: Column(
+              children: [
+                CustomHeader(
+                  userName: currentUserName,
+                  scaffoldKey: _scaffoldKey,
+                  processingCount: 0,
+                  historyCount: 0,
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => isBrowseMode = true),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isBrowseMode
-                                ? AppColors.primary.withValues(alpha: 0.15)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.horizontal(
-                                left: Radius.circular(24.r)),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            "Browse",
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: isBrowseMode
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 16.sp,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(width: 1, color: AppColors.primary),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => isBrowseMode = false),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: !isBrowseMode
-                                ? AppColors.primary.withValues(alpha: 0.15)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.horizontal(
-                                right: Radius.circular(24.r)),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            "Map",
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: !isBrowseMode
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 16.sp,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                BrowseSearchBar(
+                  controller: _searchController,
+                  onSearch: (query) {
+                    debugPrint("Searching for: $query");
+                  },
+                  onCameraTap: _handleCameraTap,
                 ),
-              ),
-            ),
-
-            SizedBox(height: 20.h),
-
-            Expanded(
-              child: isBrowseMode
-                  ? BrowseTab(
-                      onDataLoaded: (items) {
-                        setState(() {
-                          browseItems = items;
-                        });
-                      },
-                    )
-                  : FlutterMap(
-                      options: MapOptions(
-                        initialCenter:
-                            const LatLng(30.0444, 31.2357),
-                        initialZoom: 13.0,
-                        minZoom: 3,
-                        maxZoom: 19,
-                        interactionOptions: const InteractionOptions(
-                          flags: InteractiveFlag.all,
+                BrowseToggleBar(
+                  isBrowseMode: _isBrowseMode,
+                  onBrowseTap: _switchToBrowse,
+                  onMapTap: _switchToMap,
+                ),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Offstage(
+                        offstage: !_isBrowseMode,
+                        child: BrowseTab(
+                          key: _browseTabKey,
+                          currentUserId: currentUserId,
+                          onDataLoaded: (items) {
+                            _controller.browseItems = items;
+                            _controller.updateMarkers();
+                          },
                         ),
                       ),
-                      children: [
-                        TileLayer(
-                          urlTemplate:
-                              'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-                          subdomains: const ['a', 'b', 'c', 'd'],
-                          retinaMode: true, 
-                          maxZoom: 20,
-                          userAgentPackageName: 'com.isense.app',
+                      Offstage(
+                        offstage: _isBrowseMode,
+                        child: BrowseMapView(
+                          controller: _controller,
+                          currentUserId: currentUserId,
+                          onMapCreated: _controller.getCurrentLocation,
                         ),
-
-                        MarkerLayer(
-                          markers: _buildMarkers(),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart'; 
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/features/home/models/extracted_item_model.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/features/home/models/extracted_item_model.dart';
 
 class ExtractedItemCard extends StatelessWidget {
   final ExtractedItemModel item;

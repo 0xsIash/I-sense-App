@@ -1,4 +1,4 @@
-package com.example.isense
+package com.example.wujidt
 
 import io.flutter.embedding.android.FlutterActivity
 

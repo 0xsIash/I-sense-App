@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:isense/core/utils/api_constants.dart';
+import 'package:wujidt/core/utils/api_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ImageService {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:isense/core/utils/app_colors.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
 
 class CustomBtn extends StatelessWidget {
   const CustomBtn({super.key, required this.text, required this.btnWidth, required this.btnHeight,required this.onPressed, required this.weight, required this.size, required this.fontFamily, required this.eleveation});

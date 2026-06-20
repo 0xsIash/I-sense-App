@@ -1,23 +1,109 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:isense/core/utils/app_assets.dart';
-import 'package:isense/core/utils/app_colors.dart';
-import 'package:isense/core/widgets/custom_svg_wrapper.dart';
-import 'package:isense/features/home/models/scan_item_model.dart';
-import 'package:isense/features/home/widgets/extracted_item_card.dart';
-import 'package:isense/features/home/widgets/similar_items_sheet.dart';
-import 'package:isense/features/home/widgets/interactive_canvas_page.dart';
+import 'package:wujidt/core/utils/app_assets.dart';
+import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/core/widgets/custom_svg_wrapper.dart';
+import 'package:wujidt/features/home/models/scan_item_model.dart';
+import 'package:wujidt/features/home/widgets/extracted_item_card.dart';
+import 'package:wujidt/features/home/widgets/similar_items_sheet.dart';
+import 'package:wujidt/features/home/widgets/interactive_canvas_page.dart';
+import 'package:wujidt/features/home/services/job_service.dart';
+import 'package:wujidt/features/home/widgets/contact_finder_sheet.dart';
+import 'package:wujidt/features/home/widgets/main_layout.dart';
 
-class ItemDetailsView extends StatelessWidget {
+class ItemDetailsView extends StatefulWidget {
   final ScanItemModel item;
+  final int currentUserId;
 
-  const ItemDetailsView({super.key, required this.item});
+  const ItemDetailsView({
+    super.key,
+    required this.item,
+    required this.currentUserId,
+  });
+
+  @override
+  State<ItemDetailsView> createState() => _ItemDetailsViewState();
+}
+
+class _ItemDetailsViewState extends State<ItemDetailsView> {
+  final JobService _jobService = JobService();
+  bool _isActionLoading = false;
+
+  Future<void> _handlePublishAction() async {
+    setState(() => _isActionLoading = true);
+    bool success;
+    final int imageId = widget.item.imageId ?? widget.item.id ?? 0;
+
+    if (widget.item.isPublic) {
+      success = await _jobService.unPublishImage(imageId);
+    } else {
+      success = await _jobService.publishImage(imageId);
+    }
+
+    if (success && mounted) {
+      setState(() {
+        widget.item.isPublic = !widget.item.isPublic;
+        _isActionLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(widget.item.isPublic ? "Published Successfully" : "Unpublished Successfully"),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+    } else if (mounted) {
+      setState(() => _isActionLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Action Failed"), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _openContactFinder(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) {
+        return ContactFinderSheet(
+          uploaderName: widget.item.userName ?? "Unknown User",
+          phoneNumber: widget.item.phoneNumber ?? "No Phone Provided",
+          locationName: widget.item.locationName ?? "Unknown Location",
+          onMapPressed: () {
+            Navigator.pop(context);
+            Navigator.pop(context);
+            if (widget.item.latitude != null && widget.item.longitude != null) {
+              MainLayout.targetMapLocation.value = {
+                'id': widget.item.id,
+                'latitude': widget.item.latitude,
+                'longitude': widget.item.longitude,
+                'title': widget.item.locationName ?? "Image Location",
+              };
+              MainLayout.navigationTrigger.value = 2;
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Location coordinates not available for this image")),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final extractedList = item.extractedItems ?? [];
+    final extractedList = widget.item.extractedItems ?? [];
+    final double totalPrice = extractedList.fold(0.0, (sum, e) => sum + e.price);
 
-  final double totalPrice = extractedList.fold(0.0, (sum, e) => sum + e.price);
+    final bool isRealOwner = widget.item.userId != null && 
+                             widget.item.userId != 0 && 
+                             (widget.item.userId == widget.currentUserId || 
+                              widget.item.userId.toString() == widget.currentUserId.toString());
+
+    final bool showPublishControls = !widget.item.isPublic || isRealOwner;
 
     final List<String> tags = extractedList
         .map((e) => e.name.toString())
@@ -26,221 +112,181 @@ class ItemDetailsView extends StatelessWidget {
         .cast<String>();
 
     ImageProvider? headerImage;
-    if (item.imageFile != null) {
-      headerImage = FileImage(item.imageFile!);
-    } else if (item.imageUrl != null) {
-      headerImage = NetworkImage(item.imageUrl!);
+    if (widget.item.imageFile != null) {
+      headerImage = FileImage(widget.item.imageFile!);
+    } else if (widget.item.imageUrl != null) {
+      headerImage = NetworkImage(widget.item.imageUrl!);
     }
 
     return Scaffold(
       backgroundColor: AppColors.primaryBackgrond,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-                child: InkWell(
-                  onTap: () => Navigator.pop(context),
-                  child: CustomSvgWrapper(path: AppAssets.arrowBack),
-                ),
-              ),
-
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 20.w),
-                height: 350.h,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20.r),
-                  color: Colors.grey[200],
-                  image: headerImage != null
-                      ? DecorationImage(
-                          image: headerImage,
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: headerImage == null
-                    ? Icon(Icons.image, size: 50.sp, color: Colors.grey[400])
-                    : null,
-              ),
-
-              SizedBox(height: 15.h),
-
-              // ── Arrange Objects Button ──────────────────────────
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => InteractiveCanvasPage(item: item),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.open_with, color: Colors.white),
-                  label: Text(
-                    "Arrange Objects",
-                    style: TextStyle(color: Colors.white, fontSize: 14.sp),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    minimumSize: Size(double.infinity, 45.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 15.h),
-
-              // ── Tags ───────────────────────────────────────────
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Tags",
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: AppColors.primary,
-                        fontFamily: 'Kreon',
-                        fontWeight: FontWeight.bold,
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                      child: InkWell(
+                        onTap: () => Navigator.pop(context),
+                        child: CustomSvgWrapper(path: AppAssets.arrowBack),
                       ),
                     ),
-                    SizedBox(height: 8.h),
-
-                    tags.isEmpty
-                        ? Text(
-                            "No tags detected",
-                            style: TextStyle(color: Colors.grey, fontSize: 12.sp),
-                          )
-                        : Wrap(
-                            spacing: 8.w,
-                            runSpacing: 8.h,
-                            children: tags
-                                .map((tag) => Chip(
-                                      label: Text(
-                                        tag,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12.sp,
-                                          fontFamily: 'Kreon',
-                                        ),
-                                      ),
-                                      backgroundColor: AppColors.primary,
-                                      padding: EdgeInsets.zero,
-                                      labelPadding: EdgeInsets.symmetric(
-                                          horizontal: 10.w),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      side: BorderSide.none,
-                                    ))
-                                .toList(),
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20.w),
+                      height: 350.h,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.r),
+                        color: Colors.grey[200],
+                        image: headerImage != null
+                            ? DecorationImage(image: headerImage, fit: BoxFit.cover)
+                            : null,
+                      ),
+                      child: headerImage == null
+                          ? Icon(Icons.image, size: 50.sp, color: Colors.grey[400])
+                          : null,
+                    ),
+                    SizedBox(height: 15.h),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => InteractiveCanvasPage(item: widget.item),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.open_with, color: Colors.white),
+                        label: Text("Arrange Objects", style: TextStyle(color: Colors.white, fontSize: 14.sp)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          minimumSize: Size(double.infinity, 45.h),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 15.h),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Tags", style: TextStyle(fontSize: 16.sp, color: AppColors.primary, fontFamily: 'Kreon', fontWeight: FontWeight.bold)),
+                          SizedBox(height: 8.h),
+                          tags.isEmpty
+                              ? Text("No tags detected", style: TextStyle(color: Colors.grey, fontSize: 12.sp))
+                              : Wrap(
+                                  spacing: 8.w,
+                                  runSpacing: 8.h,
+                                  children: tags.map((tag) => Chip(
+                                    label: Text(tag, style: TextStyle(color: Colors.white, fontSize: 12.sp, fontFamily: 'Kreon')),
+                                    backgroundColor: AppColors.primary,
+                                    padding: EdgeInsets.zero,
+                                    labelPadding: EdgeInsets.symmetric(horizontal: 10.w),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                    side: BorderSide.none,
+                                  )).toList(),
+                                ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 15.h),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Row(
+                        children: [
+                          Text("Total Estimated Cost", style: TextStyle(fontSize: 16.sp, color: AppColors.primary, fontFamily: 'Kreon')),
+                          SizedBox(width: 10.w),
+                          Text("${totalPrice.toInt()} EGP", style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: AppColors.primary, fontFamily: 'Kreon')),
+                        ],
+                      ),
+                    ),
+                    Container(margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 5.h), width: 100.w, height: 2.h, color: AppColors.primary),
+                    SizedBox(height: 15.h),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Text("Extracted Items", style: TextStyle(fontSize: 16.sp, color: AppColors.primary, fontFamily: 'Kreon')),
+                    ),
+                    SizedBox(height: 10.h),
+                    extractedList.isEmpty
+                        ? Padding(padding: EdgeInsets.all(20.h), child: const Center(child: Text("No items detected yet.")))
+                        : GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                            itemCount: extractedList.length,
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 15.w,
+                              mainAxisSpacing: 15.h,
+                              childAspectRatio: 0.70,
+                            ),
+                            itemBuilder: (context, index) {
+                              final extractedItem = extractedList[index];
+                              return ExtractedItemCard(
+                                item: extractedItem,
+                                mainImageFile: widget.item.imageFile,
+                                onFindSimilar: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (context) => SimilarItemsSheet(
+                                      imageId: widget.item.imageId ?? widget.item.id ?? 0,
+                                      objId: extractedItem.id ?? 0,
+                                    ),
+                                  );
+                                },
+                              );
+                            },
                           ),
+                    SizedBox(height: 20.h),
                   ],
                 ),
               ),
-
-              SizedBox(height: 15.h),
-
-              // ── Total Cost ─────────────────────────────────────
+            ),
+            if (!showPublishControls)
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Row(
-                  children: [
-                    Text(
-                      "Total Estimated Cost",
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: AppColors.primary,
-                        fontFamily: 'Kreon',
-                      ),
+                padding: EdgeInsets.all(20.w),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 45.h,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openContactFinder(context),
+                    icon: const Icon(Icons.person_search, color: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                     ),
-                    SizedBox(width: 10.w),
-                    Text(
-                      "${totalPrice.toInt()} EGP",
-                      style: TextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                        fontFamily: 'Kreon',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 5.h),
-                width: 100.w,
-                height: 2.h,
-                color: AppColors.primary,
-              ),
-
-              SizedBox(height: 15.h),
-
-              // ── Extracted Items ────────────────────────────────
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Text(
-                  "Extracted Items",
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: AppColors.primary,
-                    fontFamily: 'Kreon',
+                    label: Text("Contact Finder", style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.bold, fontFamily: 'Kreon')),
                   ),
                 ),
               ),
-
-              SizedBox(height: 10.h),
-
-              extractedList.isEmpty
-                  ? Padding(
-                      padding: EdgeInsets.all(20.h),
-                      child: const Center(child: Text("No items detected yet.")),
-                    )
-                  : GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 20.w, vertical: 10.h),
-                      itemCount: extractedList.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 15.w,
-                        mainAxisSpacing: 15.h,
-                        childAspectRatio: 0.70,
-                      ),
-                      itemBuilder: (context, index) {
-                        final extractedItem = extractedList[index];
-
-                        return ExtractedItemCard(
-                          item: extractedItem,
-                          mainImageFile: item.imageFile,
-                          onFindSimilar: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (context) => SimilarItemsSheet(
-                                imageId: item.imageId ?? item.id ?? 0,
-                                objId: extractedItem.id ?? 0,
-                              ),
-                            );
-                          },
-                        );
-                      },
+            if (showPublishControls)
+              Padding(
+                padding: EdgeInsets.all(20.w),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 45.h,
+                  child: ElevatedButton(
+                    onPressed: _isActionLoading ? null : _handlePublishAction,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: widget.item.isPublic ? Colors.redAccent : AppColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                     ),
-
-              SizedBox(height: 20.h),
-            ],
-          ),
+                    child: _isActionLoading
+                        ? SizedBox(width: 20.w, height: 20.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Text(widget.item.isPublic ? "Unpublish" : "Publish", style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
