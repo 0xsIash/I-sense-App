@@ -96,7 +96,7 @@ class AuthService {
     if (phone != null) formData.fields.add(MapEntry('phone_number', phone));
     
     if (deleteImage) {
-      formData.fields.add(const MapEntry('profile_picture', '')); 
+      formData.fields.add(const MapEntry('remove_profile_picture', 'null')); 
     } else if (imageFile != null) {
       formData.files.add(MapEntry(
         'profile_picture',
@@ -112,6 +112,31 @@ class AuthService {
       );
       
       if (response.statusCode == 200) {
+        await fetchAndCacheProfile();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteProfilePicture() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    FormData formData = FormData();
+    formData.fields.add(const MapEntry('remove_profile_picture', 'null'));
+
+    try {
+      final response = await _dio.put(
+        ApiConstants.updateProfileEndpoint,
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        await prefs.remove('profilePicture');
         await fetchAndCacheProfile();
         return true;
       }

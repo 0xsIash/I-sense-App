@@ -34,7 +34,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String? profileImageUrl;
   File? selectedImage;
-  bool _shouldDeleteImage = false;
 
   @override
   void initState() {
@@ -67,30 +66,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
-      builder: (BuildContext context) {
+      builder: (BuildContext sheetContext) {
         return SafeArea(
           child: Wrap(
             children: <Widget>[
               ListTile(
                 leading: Icon(Icons.photo_library, color: AppColors.primary),
-                title: const Text('Choose from Gallery', style: TextStyle(fontFamily: 'Kreon')),
+                title: const Text('Edit Profile Picture', style: TextStyle(fontFamily: 'Kreon')),
                 onTap: () async {
-                  Navigator.pop(context);
-                  File? image = await ImagePickerHelper.showImageSourceOptions(context);
-                  if (image != null) {
-                    setState(() {
-                      selectedImage = image;
-                      _shouldDeleteImage = false;
-                    });
+                  Navigator.pop(sheetContext);
+                  if (context.mounted) {
+                    File? image = await ImagePickerHelper.showImageSourceOptions(context);
+                    if (image != null && mounted) {
+                      setState(() {
+                        selectedImage = image;
+                      });
+                    }
                   }
                 },
               ),
               if (selectedImage != null || (profileImageUrl != null && profileImageUrl!.isNotEmpty))
                 ListTile(
                   leading: const Icon(Icons.delete_forever, color: Colors.red),
-                  title: const Text('Delete Current Photo', style: TextStyle(color: Colors.red, fontFamily: 'Kreon')),
+                  title: const Text('Delete Profile Picture', style: TextStyle(color: Colors.red, fontFamily: 'Kreon')),
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.pop(sheetContext);
                     _confirmDeleteDialog();
                   },
                 ),
@@ -105,7 +105,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           backgroundColor: AppColors.primaryBackgrond,
           title: const Text(
@@ -116,17 +116,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontFamily: 'Kreon')),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
             ),
             TextButton(
               child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Kreon')),
-              onPressed: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  selectedImage = null;
-                  profileImageUrl = null;
-                  _shouldDeleteImage = true;
-                });
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                setState(() => isLoading = true);
+                
+                bool deleted = await _authService.deleteProfilePicture();
+                
+                setState(() => isLoading = false);
+                
+                if (deleted && context.mounted) {
+                  setState(() {
+                    selectedImage = null;
+                    profileImageUrl = null;
+                  });
+                  // ignore: use_build_context_synchronously
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Profile picture removed successfully"),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else if (context.mounted) {
+                  // ignore: use_build_context_synchronously
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Failed to remove profile picture"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
             ),
           ],
@@ -143,7 +165,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       bool isPasswordSuccess = await _authService.updatePassword(oldPassController.text, newPassController.text);
       if (!isPasswordSuccess) {
         setState(() => isLoading = false);
-        if (mounted) {
+        if (context.mounted) {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Incorrect current password! Password update failed."),
@@ -155,10 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
 
-    if (_shouldDeleteImage) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('profilePicture', '');
-    } else if (selectedImage != null) {
+    if (selectedImage != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('profilePicture', selectedImage!.path);
     }
@@ -166,8 +186,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool success = await _authService.updateProfile(
       name: nameController.text,
       phone: phoneController.text,
-      imageFile: _shouldDeleteImage ? null : selectedImage,
-      deleteImage: _shouldDeleteImage,
+      imageFile: selectedImage,
+      deleteImage: false,
     );
 
     if (success) {
@@ -179,7 +199,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         setState(() {
           profileImageUrl = prefs.getString('profilePicture');
           selectedImage = null;
-          _shouldDeleteImage = false;
         });
       }
 
@@ -189,7 +208,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     setState(() => isLoading = false);
 
-    if (mounted) {
+    if (context.mounted) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(success ? "Profile updated successfully!" : "Update failed"),
@@ -321,7 +341,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: CustomBottomNav(currentIndex: 0, onTap: (index) { MainLayout.navigationTrigger.value = index; Navigator.pop(context); }),
+      bottomNavigationBar: CustomBottomNav(
+        currentIndex: 0, 
+        onTap: (index) { 
+          MainLayout.navigationTrigger.value = index; 
+          if (context.mounted) {
+            Navigator.pop(context); 
+          }
+        }
+      ),
     );
   }
 

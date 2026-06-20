@@ -235,7 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               currentUserId: userId ?? 0,
             ),
           ),
-        );
+        ).then((_) => _loadUserData());
       },
       child: ScanItemCard(
         imageFile: item.imageFile,
