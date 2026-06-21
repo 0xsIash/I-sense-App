@@ -10,6 +10,7 @@ import 'package:wujidt/features/home/widgets/browse_toggle_bar.dart';
 import 'package:wujidt/features/home/widgets/custom_drawer.dart';
 import 'package:wujidt/features/home/widgets/browse_search_bar.dart';
 import 'package:wujidt/features/home/widgets/main_layout.dart';
+import 'package:wujidt/features/home/views/top_match_screen.dart';
 
 class BrowsePage extends StatefulWidget {
   final GlobalKey homeKey;
@@ -69,8 +70,13 @@ class _BrowsePageState extends State<BrowsePage> {
 
   Future<void> _handleCameraTap() async {
     File? imageFile = await ImagePickerHelper.showImageSourceOptions(context);
-    if (imageFile != null) {
-      debugPrint("Selected image for search: ${imageFile.path}");
+    if (imageFile != null && context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TopMatchScreen(searchImage: imageFile),
+        ),
+      );
     }
   }
 

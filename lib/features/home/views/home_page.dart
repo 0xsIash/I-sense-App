@@ -87,7 +87,6 @@ class HomePageState extends State<HomePage> {
         setState(() => item.extractedItems = objects);
       }
     } catch (e) {
-      //
     }
   }
 
@@ -113,6 +112,7 @@ class HomePageState extends State<HomePage> {
           progress: 0.1,
           status: 'pending',
           isPublic: false,
+          userId: localUserId,
         );
         setState(() => processingList.insert(0, newItem));
         _uploadAndProcessImage(newItem, position);
@@ -317,7 +317,7 @@ class HomePageState extends State<HomePage> {
                                   return GestureDetector(
                                     onTap: () {
                                       if (isSelectionMode) {
-                                            toggleItemSelection(item);
+                                          toggleItemSelection(item);
                                       } else if (item.isCompleted) {
                                         Navigator.push(
                                           context,
