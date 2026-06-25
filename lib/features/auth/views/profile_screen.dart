@@ -75,9 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             height: 16.h,
             colorFilter: ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
           ),
-          onPressed: () {
-            MainLayout.navigationTrigger.value = 0;
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           "Profile",

@@ -30,4 +30,24 @@ class SearchService {
       return null;
     }
   }
+
+  Future<TopMatchResponse?> searchByText(String query) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.searchByText,
+        queryParameters: {
+          'q': query,
+          'limit': 10,
+          'threshold': 0.2,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return TopMatchResponse.fromJson(response.data);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }

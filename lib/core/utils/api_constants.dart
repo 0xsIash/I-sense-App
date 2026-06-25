@@ -1,6 +1,6 @@
 class ApiConstants {
 
-  static const String baseUrl = "https://qualifying-starting-acquire-pending.trycloudflare.com"; 
+  static const String baseUrl = "https://ext-survivor-surprised-jpg.trycloudflare.com"; 
 
   static const String loginEndpoint = "/auth/login";
   static const String signupEndpoint = "/auth/signup";
@@ -23,5 +23,6 @@ class ApiConstants {
 
   static String getSimilarProductsEndpoint(int imageId, int objId) => "/similar_products/$imageId/$objId/similar-products";
   static const String searchByImage = "/search/by-image";
+  static const String searchByText = '/search/text';
 
 }

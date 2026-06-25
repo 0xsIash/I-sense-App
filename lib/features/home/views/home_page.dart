@@ -87,6 +87,7 @@ class HomePageState extends State<HomePage> {
         setState(() => item.extractedItems = objects);
       }
     } catch (e) {
+      //
     }
   }
 

@@ -106,9 +106,10 @@ class _LoginState extends State<Login> {
                                     );
                                     if (context.mounted) {
                                       FocusScope.of(context).unfocus();
-                                      Navigator.pushReplacementNamed(
+                                      Navigator.pushNamedAndRemoveUntil(
                                         context,
                                         "home",
+                                        (route) => false,
                                         arguments: {
                                           'userName': userData['name'],
                                           'userId': userData['id'],
