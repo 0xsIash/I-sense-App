@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:dio/dio.dart';
 import 'package:wujidt/core/utils/app_assets.dart';
@@ -25,10 +26,34 @@ class _LoginState extends State<Login> {
   bool isRememberMe = false;
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+  DateTime? _lastBackPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        final now = DateTime.now();
+
+        if (_lastBackPressed == null ||
+            now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
+          _lastBackPressed = now;
+
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Press back again to exit'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+
+          return;
+        }
+
+        SystemNavigator.pop();
+      },
+      child: Scaffold(
       resizeToAvoidBottomInset: false,
       body: Container(
         color: AppColors.primaryBackgrond,
@@ -164,6 +189,8 @@ class _LoginState extends State<Login> {
           ),
         ),
       ),
-    );
-  }
+       ),
+  );
+}
+
 }
