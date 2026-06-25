@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -35,6 +36,7 @@ class HomePageState extends State<HomePage> {
   bool _isDeleting = false;
   bool _isSharing = false;
   int? localUserId;
+  DateTime? _lastBackPressed;
 
   List<ScanItemModel> processingList = [];
   List<ScanItemModel> historyList = [];
@@ -267,17 +269,39 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final Map<String, dynamic> args = (ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?) ?? {};
-    final int currentUserId = args['userId'] ?? localUserId ?? 0;
-    
-    List<ScanItemModel> allItems = [...processingList, ...historyList];
+ @override
+Widget build(BuildContext context) {
+  final Map<String, dynamic> args =
+      (ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?) ?? {};
+  final int currentUserId = args['userId'] ?? localUserId ?? 0;
 
-    return ValueListenableBuilder<String>(
-      valueListenable: MainLayout.userNameNotifier,
-      builder: (context, currentUserName, child) {
-        return Scaffold(
+  List<ScanItemModel> allItems = [...processingList, ...historyList];
+
+  return ValueListenableBuilder<String>(
+    valueListenable: MainLayout.userNameNotifier,
+    builder: (context, currentUserName, child) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          final now = DateTime.now();
+
+          if (_lastBackPressed == null ||
+              now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
+            _lastBackPressed = now;
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Press back again to exit'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            return;
+          }
+
+          SystemNavigator.pop();
+        },
+        child: Scaffold(
           key: _scaffoldKey,
           backgroundColor: Colors.white,
           drawer: CustomDrawer(userName: currentUserName),
@@ -304,10 +328,14 @@ class HomePageState extends State<HomePage> {
                               onRefresh: _loadHistory,
                               color: AppColors.primary,
                               child: GridView.builder(
-                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 20.w,
+                                  vertical: 10.h,
+                                ),
                                 itemCount: allItems.length,
                                 physics: const AlwaysScrollableScrollPhysics(),
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 2,
                                   crossAxisSpacing: 15.w,
                                   mainAxisSpacing: 15.h,
@@ -318,7 +346,7 @@ class HomePageState extends State<HomePage> {
                                   return GestureDetector(
                                     onTap: () {
                                       if (isSelectionMode) {
-                                          toggleItemSelection(item);
+                                        toggleItemSelection(item);
                                       } else if (item.isCompleted) {
                                         Navigator.push(
                                           context,
@@ -336,7 +364,8 @@ class HomePageState extends State<HomePage> {
                                       imageUrl: item.imageUrl,
                                       bottomContent: _buildBottomContent(item),
                                       isSelectionMode: isSelectionMode,
-                                      isSelected: selectedItems.contains(item),
+                                      isSelected:
+                                          selectedItems.contains(item),
                                     ),
                                   );
                                 },
@@ -354,10 +383,11 @@ class HomePageState extends State<HomePage> {
               ],
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   Widget _buildBottomContent(ScanItemModel item) {
     if (item.status == 'pending' || item.progress < 1.0) {

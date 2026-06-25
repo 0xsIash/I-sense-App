@@ -85,16 +85,23 @@ class _BrowsePageState extends State<BrowsePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final Map<String, dynamic> args = 
-        (ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?) ?? {};
-    
-    final int currentUserId = args['userId'] ?? 0;
+Widget build(BuildContext context) {
+  final Map<String, dynamic> args =
+      (ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?) ?? {};
 
-    return ValueListenableBuilder<String>(
-      valueListenable: MainLayout.userNameNotifier,
-      builder: (context, currentUserName, child) {
-        return Scaffold(
+  final int currentUserId = args['userId'] ?? 0;
+
+  return ValueListenableBuilder<String>(
+    valueListenable: MainLayout.userNameNotifier,
+    builder: (context, currentUserName, child) {
+      return PopScope(
+        canPop: MainLayout.navigationTrigger.value == 0,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop && MainLayout.navigationTrigger.value != 0) {
+            MainLayout.navigationTrigger.value = 0;
+          }
+        },
+        child: Scaffold(
           backgroundColor: AppColors.primaryBackgrond,
           key: _scaffoldKey,
           drawer: CustomDrawer(userName: currentUserName),
@@ -169,8 +176,8 @@ class _BrowsePageState extends State<BrowsePage> {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(20.r),
                                   child: Image.network(
-                                    matchedItem.segmentedImageUrl.isNotEmpty 
-                                        ? matchedItem.segmentedImageUrl 
+                                    matchedItem.segmentedImageUrl.isNotEmpty
+                                        ? matchedItem.segmentedImageUrl
                                         : matchedItem.originalImageUrl,
                                     fit: BoxFit.contain,
                                   ),
@@ -216,8 +223,9 @@ class _BrowsePageState extends State<BrowsePage> {
               ],
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 }
