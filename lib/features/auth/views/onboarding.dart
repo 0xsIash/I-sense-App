@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
 import 'package:wujidt/core/widgets/custom_btn.dart';
@@ -39,91 +40,123 @@ class _OnboardingViewState extends State<OnboardingView>
     final String userName =
         (ModalRoute.of(context)?.settings.arguments as String?) ?? "User";
 
-    return Scaffold(
-      backgroundColor: AppColors.primaryBackgrond,
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryBackgrond,
-        elevation: 0,
-        actions: [
-          if (!isLastPage)
-            TextButton(
-              onPressed: () => _pageController.animateToPage(
-                5,
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeInOut,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
+        final shouldExit = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Exit App'),
+              content: const Text(
+                'Are you sure you want to exit the application?',
               ),
-              child: Text(
-                "Skip",
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'IBMPlexSans',
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
                 ),
-              ),
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (index) =>
-                  setState(() => isLastPage = index == 5),
-              children: [
-                const FirstPage(),
-                CameraPage(animationController: _animationController),
-                AIProcessingPage(animationController: _animationController),
-                FindItemsPage(animationController: _animationController),
-                const DetailsPage(),
-                GetStartedPage(animationController: _animationController),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Exit'),
+                ),
               ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-            child: Column(
-              children: [
-                SmoothPageIndicator(
-                  controller: _pageController,
-                  count: 6,
-                  effect: ExpandingDotsEffect(
-                    activeDotColor: AppColors.primary,
-                    dotColor: Colors.grey.shade300,
-                    dotHeight: 8.h,
-                    dotWidth: 8.w,
-                    expansionFactor: 4,
+            );
+          },
+        );
+
+        if (shouldExit == true) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.primaryBackgrond,
+        appBar: AppBar(
+          backgroundColor: AppColors.primaryBackgrond,
+          elevation: 0,
+          actions: [
+            if (!isLastPage)
+              TextButton(
+                onPressed: () => _pageController.animateToPage(
+                  5,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                ),
+                child: Text(
+                  "Skip",
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'IBMPlexSans',
                   ),
                 ),
-                SizedBox(height: 30.h),
-                CustomBtn(
-                  text: isLastPage ? "Get Started" : "Next  >",
-                  onPressed: () {
-                    if (isLastPage) {
-                      Navigator.pushReplacementNamed(
-                        context,
-                        "splash",
-                        arguments: userName,
-                      );
-                    } else {
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                  },
-                  btnWidth: double.infinity,
-                  btnHeight: 48.h,
-                  size: 16.sp,
-                  weight: FontWeight.w600,
-                  fontFamily: 'IBMPlexSans',
-                  eleveation: 8,
-                ),
-              ],
+              ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) =>
+                    setState(() => isLastPage = index == 5),
+                children: [
+                  const FirstPage(),
+                  CameraPage(animationController: _animationController),
+                  AIProcessingPage(animationController: _animationController),
+                  FindItemsPage(animationController: _animationController),
+                  const DetailsPage(),
+                  GetStartedPage(animationController: _animationController),
+                ],
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+              child: Column(
+                children: [
+                  SmoothPageIndicator(
+                    controller: _pageController,
+                    count: 6,
+                    effect: ExpandingDotsEffect(
+                      activeDotColor: AppColors.primary,
+                      dotColor: Colors.grey.shade300,
+                      dotHeight: 8.h,
+                      dotWidth: 8.w,
+                      expansionFactor: 4,
+                    ),
+                  ),
+                  SizedBox(height: 30.h),
+                  CustomBtn(
+                    text: isLastPage ? "Get Started" : "Next  >",
+                    onPressed: () {
+                      if (isLastPage) {
+                        Navigator.pushReplacementNamed(
+                          context,
+                          "splash",
+                          arguments: userName,
+                        );
+                      } else {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    },
+                    btnWidth: double.infinity,
+                    btnHeight: 48.h,
+                    size: 16.sp,
+                    weight: FontWeight.w600,
+                    fontFamily: 'IBMPlexSans',
+                    eleveation: 8,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

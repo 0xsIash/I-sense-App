@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
 import 'package:wujidt/features/home/models/scan_item_model.dart';
 import 'package:wujidt/features/home/widgets/item_details_view.dart';
@@ -14,6 +15,24 @@ class MapItemCard extends StatelessWidget {
     required this.item,
     required this.currentUserId,
   });
+
+  Future<void> _navigateToDetails(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedId = prefs.getInt('userId');
+    final activeUserId = savedId ?? currentUserId;
+
+    if (context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ItemDetailsView(
+            item: item,
+            currentUserId: activeUserId,
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,15 +51,7 @@ class MapItemCard extends StatelessWidget {
         ],
       ),
       child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ItemDetailsView(
-              item: item,
-              currentUserId: currentUserId,
-            ),
-          ),
-        ),
+        onTap: () => _navigateToDetails(context),
         child: Row(
           children: [
             ClipRRect(

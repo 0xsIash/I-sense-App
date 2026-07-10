@@ -28,10 +28,8 @@ class CustomTextFormField extends StatefulWidget {
   State<CustomTextFormField> createState() => _CustomTextFormFieldState();
 }
 
-class _CustomTextFormFieldState extends State<CustomTextFormField>
-    with TickerProviderStateMixin {
+class _CustomTextFormFieldState extends State<CustomTextFormField> {
   bool _obscureText = true;
-  String? _errorText;
 
   @override
   void initState() {
@@ -39,20 +37,10 @@ class _CustomTextFormFieldState extends State<CustomTextFormField>
     _obscureText = widget.isPassword;
   }
 
-  String? _validate(String? value) {
-    final result = widget.validator?.call(value);
-
-    setState(() {
-      _errorText = result;
-    });
-
-    return result == null ? null : '';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -77,14 +65,16 @@ class _CustomTextFormFieldState extends State<CustomTextFormField>
           const SizedBox(height: 8),
           TextFormField(
             controller: widget.controller,
-            validator: _validate,
+            validator: widget.validator,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             cursorColor: AppColors.primary,
             obscureText: widget.isPassword ? _obscureText : false,
             keyboardType: widget.keyboardType,
             decoration: InputDecoration(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              errorStyle: const TextStyle(height: 0, fontSize: 0),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               suffixIcon: widget.isPassword
                   ? IconButton(
                       onPressed: () {
@@ -102,42 +92,30 @@ class _CustomTextFormFieldState extends State<CustomTextFormField>
                   : null,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: AppColors.primary, width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: AppColors.primary, width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: Colors.red, width: 2),
+                borderSide: const BorderSide(
+                  color: Colors.red,
+                  width: 2,
+                ),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: Colors.red, width: 2),
-              ),
-            ),
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            child: Visibility(
-              visible: _errorText != null,
-              maintainState: true,
-              maintainAnimation: true,
-              maintainSize: true,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 3, left: 12),
-                child: Text(
-                  _errorText ?? '',
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontSize: 12,
-                  ),
+                borderSide: const BorderSide(
+                  color: Colors.red,
+                  width: 2,
                 ),
               ),
             ),

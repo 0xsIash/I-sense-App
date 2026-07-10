@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
+import 'package:wujidt/features/auth/views/profile_screen.dart';
 import 'package:wujidt/features/auth/views/settings_screen.dart';
-import 'package:wujidt/features/home/widgets/main_layout.dart'; 
 
 class CustomDrawer extends StatefulWidget {
   const CustomDrawer({
@@ -84,7 +84,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
             InkWell(
               onTap: () {
                 Navigator.pop(context);
-                MainLayout.navigationTrigger.value = 3; 
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
               },
               child: Row(
                 children: [
