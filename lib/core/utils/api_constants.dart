@@ -1,6 +1,6 @@
 class ApiConstants {
 
-  static const String baseUrl = "https://ext-survivor-surprised-jpg.trycloudflare.com"; 
+  static const String baseUrl = "http://192.168.1.6:8000"; 
 
   static const String loginEndpoint = "/auth/login";
   static const String signupEndpoint = "/auth/signup";

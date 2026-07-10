@@ -8,7 +8,7 @@ import 'package:wujidt/features/home/models/scan_item_model.dart';
 import 'package:wujidt/features/home/widgets/map_marker.dart';
 
 class BrowseController extends ChangeNotifier {
-  static const String _apiKey = "AIzaSyA156WdigDXIUp0UayqtZVoqa8LJBUO7sY";
+  static const String _apiKey = "AIzaSyBVP5PN2lZEJrRDLeFkkZ3P0_0qeKOnqVw";
   static const LatLng _defaultLocation = LatLng(30.0444, 31.2357);
 
   GoogleMapController? mapController;
@@ -115,7 +115,7 @@ class BrowseController extends ChangeNotifier {
         if (data["status"] == "OK" && (data["routes"] as List).isNotEmpty) {
           final leg = data["routes"][0]["legs"][0];
           travelInfo =
-              "Distance: ${leg["distance"]["text"]} | Duration: ${leg["duration"]["text"]}";
+              "Distance: ${leg["distance"]["text"]}";
           notifyListeners();
           return;
         }

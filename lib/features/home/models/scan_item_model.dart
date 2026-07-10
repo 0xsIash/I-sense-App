@@ -10,14 +10,15 @@ class ScanItemModel {
   final String? userName;
   final String? phoneNumber;
   
-  final String? imageUrl; 
+  final String? imageUrl;       
+  final String? annotatedUrl;   
   final File? imageFile;   
   final String? locationName; 
   final String? location;
   
   String status;
-  double progress;   
-  bool isDeleted;    
+  double progress;    
+  bool isDeleted;     
   double? totalCost; 
 
   List<ExtractedItemModel>? extractedItems;
@@ -34,6 +35,7 @@ class ScanItemModel {
     this.imageId,
     this.jobId,
     this.imageUrl,
+    this.annotatedUrl,
     this.imageFile,
     this.locationName,
     this.location,
@@ -54,15 +56,25 @@ class ScanItemModel {
   }
 
   factory ScanItemModel.fromJson(Map<String, dynamic> json) {
-    String? fullImageUrl;
-    String? rawPath = json['original_url'] ?? json['file_name'] ?? json['url'] ?? json['annotated_url'];
-
-    if (rawPath != null) {
-      if (rawPath.startsWith('http')) {
-        fullImageUrl = rawPath;
+    String? originalImageUrl;
+    String? rawOriginal = json['original_url'] ?? json['image_url'];
+    if (rawOriginal != null) {
+      if (rawOriginal.startsWith('http')) {
+        originalImageUrl = rawOriginal;
       } else {
-        String cleanPath = rawPath.startsWith('/') ? rawPath.substring(1) : rawPath;
-        fullImageUrl = "${ApiConstants.baseUrl}/$cleanPath";
+        String cleanPath = rawOriginal.startsWith('/') ? rawOriginal.substring(1) : rawOriginal;
+        originalImageUrl = "${ApiConstants.baseUrl}/$cleanPath";
+      }
+    }
+
+    String? fullAnnotatedUrl;
+    String? rawAnnotated = json['annotated_url'];
+    if (rawAnnotated != null) {
+      if (rawAnnotated.startsWith('http')) {
+        fullAnnotatedUrl = rawAnnotated;
+      } else {
+        String cleanPath = rawAnnotated.startsWith('/') ? rawAnnotated.substring(1) : rawAnnotated;
+        fullAnnotatedUrl = "${ApiConstants.baseUrl}/$cleanPath";
       }
     }
 
@@ -91,7 +103,8 @@ class ScanItemModel {
       phoneNumber: json['publisher_phone'] ?? json['phone_number'],
       imageId: dynamicId,
       jobId: dynamicId,
-      imageUrl: fullImageUrl,
+      imageUrl: originalImageUrl,
+      annotatedUrl: fullAnnotatedUrl ?? originalImageUrl, 
       locationName: json['location_name'] ?? "Unknown Location",
       location: json['location_name'] ?? "Unknown Location",
       status: serverStatus,

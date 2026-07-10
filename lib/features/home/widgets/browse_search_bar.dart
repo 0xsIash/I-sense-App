@@ -9,7 +9,7 @@ class BrowseSearchBar extends StatefulWidget {
   final TextEditingController controller;
   final Function(String) onSearch;
   final VoidCallback onCameraTap;
-  final Function(TopMatchItem)? onResultTapped; // أضفنا هذا الـ Callback للانتقال للتفاصيل
+  final Function(TopMatchItem)? onResultTapped; 
 
   const BrowseSearchBar({
     super.key,
@@ -66,8 +66,7 @@ class _BrowseSearchBarState extends State<BrowseSearchBar> {
 
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       setState(() => _isLoading = true);
-      _showOverlay(); // إظهار حالة التحميل
-
+      _showOverlay(); 
       final response = await _searchService.searchByText(query);
 
       if (mounted) {
@@ -76,7 +75,7 @@ class _BrowseSearchBarState extends State<BrowseSearchBar> {
           _searchResults = response?.results ?? [];
         });
         if (_focusNode.hasFocus) {
-          _overlayEntry?.markNeedsBuild(); // تحديث الـ Dropdown بالبيانات الجديدة
+          _overlayEntry?.markNeedsBuild(); 
         }
       }
     });
@@ -93,13 +92,13 @@ class _BrowseSearchBarState extends State<BrowseSearchBar> {
         child: CompositedTransformFollower(
           link: _layerLink,
           showWhenUnlinked: false,
-          offset: Offset(0.0, size.height + 8.h), // مسافة بين السيرش والدروب داون
+          offset: Offset(0.0, size.height + 8.h), 
           child: Material(
             elevation: 8,
             borderRadius: BorderRadius.circular(15.r),
             color: Colors.white,
             child: Container(
-              constraints: BoxConstraints(maxHeight: 300.h), // أقصى طول للقائمة
+              constraints: BoxConstraints(maxHeight: 300.h), 
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(15.r),
               ),
@@ -141,7 +140,7 @@ class _BrowseSearchBarState extends State<BrowseSearchBar> {
                               onTap: () {
                                 _hideOverlay();
                                 _focusNode.unfocus();
-                                widget.onResultTapped?.call(item); // إرسال العنصر لصفحة Browse
+                                widget.onResultTapped?.call(item); 
                               },
                             );
                           },
@@ -161,7 +160,6 @@ class _BrowseSearchBarState extends State<BrowseSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    // هذا هو تصميم السيرش بار الأساسي الخاص بك مغلف بـ CompositedTransformTarget
     return CompositedTransformTarget(
       link: _layerLink,
       child: Container(

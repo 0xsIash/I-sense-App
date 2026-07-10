@@ -4,12 +4,10 @@ import 'package:wujidt/core/utils/app_assets.dart';
 import 'package:wujidt/core/utils/app_colors.dart';
 import 'package:wujidt/core/widgets/custom_svg_wrapper.dart';
 import 'package:wujidt/features/home/models/scan_item_model.dart';
-import 'package:wujidt/features/home/widgets/extracted_item_card.dart';
-import 'package:wujidt/features/home/widgets/similar_items_sheet.dart';
-import 'package:wujidt/features/home/widgets/interactive_canvas_page.dart';
 import 'package:wujidt/features/home/services/job_service.dart';
 import 'package:wujidt/features/home/widgets/contact_finder_sheet.dart';
 import 'package:wujidt/features/home/widgets/main_layout.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ItemDetailsView extends StatefulWidget {
   final ScanItemModel item;
@@ -96,7 +94,6 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
   @override
   Widget build(BuildContext context) {
     final extractedList = widget.item.extractedItems ?? [];
-    final double totalPrice = extractedList.fold(0.0, (sum, e) => sum + e.price);
 
     final bool isRealOwner = widget.item.userId != null && 
                              widget.item.userId != 0 && 
@@ -114,8 +111,8 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
     ImageProvider? headerImage;
     if (widget.item.imageFile != null) {
       headerImage = FileImage(widget.item.imageFile!);
-    } else if (widget.item.imageUrl != null) {
-      headerImage = NetworkImage(widget.item.imageUrl!);
+    } else if (widget.item.annotatedUrl != null) {
+      headerImage = NetworkImage(widget.item.annotatedUrl!);
     }
 
     return Scaffold(
@@ -153,27 +150,6 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
                     SizedBox(height: 15.h),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => InteractiveCanvasPage(item: widget.item),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.open_with, color: Colors.white),
-                        label: Text("Arrange Objects", style: TextStyle(color: Colors.white, fontSize: 14.sp)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          minimumSize: Size(double.infinity, 45.h),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 15.h),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -199,19 +175,7 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
                     SizedBox(height: 15.h),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
-                      child: Row(
-                        children: [
-                          Text("Total Estimated Cost", style: TextStyle(fontSize: 16.sp, color: AppColors.primary, fontFamily: 'Kreon')),
-                          SizedBox(width: 10.w),
-                          Text("${totalPrice.toInt()} EGP", style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: AppColors.primary, fontFamily: 'Kreon')),
-                        ],
-                      ),
-                    ),
-                    Container(margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 5.h), width: 100.w, height: 2.h, color: AppColors.primary),
-                    SizedBox(height: 15.h),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w),
-                      child: Text("Extracted Items", style: TextStyle(fontSize: 16.sp, color: AppColors.primary, fontFamily: 'Kreon')),
+                      child: Text("Extracted Items", style: TextStyle(fontSize: 16.sp, color: AppColors.primary, fontFamily: 'Kreon', fontWeight: FontWeight.bold)),
                     ),
                     SizedBox(height: 10.h),
                     extractedList.isEmpty
@@ -225,24 +189,66 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
                               crossAxisCount: 2,
                               crossAxisSpacing: 15.w,
                               mainAxisSpacing: 15.h,
-                              childAspectRatio: 0.70,
+                              childAspectRatio: 0.75,
                             ),
                             itemBuilder: (context, index) {
                               final extractedItem = extractedList[index];
-                              return ExtractedItemCard(
-                                item: extractedItem,
-                                mainImageFile: widget.item.imageFile,
-                                onFindSimilar: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (context) => SimilarItemsSheet(
-                                      imageId: widget.item.imageId ?? widget.item.id ?? 0,
-                                      objId: extractedItem.id ?? 0,
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15.r),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 5),
                                     ),
-                                  );
-                                },
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.vertical(top: Radius.circular(15.r)),
+                                        child: CachedNetworkImage(
+                                          imageUrl: extractedItem.imageUrl ?? "",
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) => Center(
+                                            child: SizedBox(
+                                              width: 20.w,
+                                              height: 20.w,
+                                              child: const CircularProgressIndicator(strokeWidth: 2),
+                                            ),
+                                          ),
+                                          errorWidget: (context, url, error) => const Icon(Icons.error),
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.all(10.w),
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(20.r),
+                                        ),
+                                        child: Text(
+                                          extractedItem.category,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 13.sp,
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               );
                             },
                           ),
